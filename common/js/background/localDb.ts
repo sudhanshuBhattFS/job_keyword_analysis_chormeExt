@@ -93,4 +93,30 @@ export class LocalDb {
       );
     });
   }
+
+  //  temporary functions
+
+  static async setLoggedIn(status: boolean): Promise<void> {
+    return new Promise((resolve) => {
+      chrome.storage.local.set({ loggedIn: status }, () => {
+        resolve();
+      });
+    });
+  }
+
+  static async isLoggedIn(): Promise<boolean> {
+    return new Promise((resolve) => {
+      chrome.storage.local.get(["loggedIn"], (result) => {
+        resolve(result["loggedIn"] === true);
+      });
+    });
+  }
+
+  static async getLoggedIn(): Promise<boolean> {
+    return new Promise((resolve) => {
+      chrome.storage.local.get(["loggedIn"], (result) => {
+        resolve(result["loggedIn"] === true);
+      });
+    });
+  }
 }

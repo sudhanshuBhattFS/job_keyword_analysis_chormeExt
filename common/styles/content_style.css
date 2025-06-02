@@ -1,0 +1,36 @@
+.top-right-popup {
+  position: fixed;
+  top: 0px;
+  right: 0px;
+}
+
+body {
+  font-family: Arial, sans-serif;
+}
+
+:host {
+  font-size: 16px !important; 
+}
+
+
+#job-keyword-analysis-popup{
+  max-width: 300px !important;
+}
+
+#job-keyword-analysis-popup {
+  width: 20rem; /* Set width of the popup */
+  background-color: #f7f7f7 !important;
+  border-radius: 0.375rem; /* Rounded corners */
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1); /* Shadow for depth */
+  border: 1px solid #e5e7eb; /* Light gray border */
+  z-index: 9999;
+  position: fixed;
+  top: 0; /* Position it near the top of the page */
+  right: 0; /* Position it near the right of the page */
+  text-align: left;
+  font-size: 0.875rem; /* Small font size */
+}
+
+#job-keyword-analysis{
+    z-index: 9999 !important;
+}

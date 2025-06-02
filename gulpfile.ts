@@ -60,7 +60,7 @@ function compileTS() {
 // JavaScript Minification
 function bgScripts(browser: string, folderName: string) {
   return bundleScript(
-    "./common/js/background/serviceWorkerv1.ts",
+    "./common/js/background/service-worker.ts",
     `./${folderName}/${browser}/js`,
     "background_bundle.min.js"
   );
@@ -68,7 +68,7 @@ function bgScripts(browser: string, folderName: string) {
 
 function contentScripts(browser: string, folderName: string) {
   return bundleScript(
-    "./common/js/content/contentScriptv1.ts",
+    "./common/js/content/content-script.ts",
     `./${folderName}/${browser}/js`,
     "content_bundle.min.js"
   );
