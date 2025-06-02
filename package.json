@@ -1,0 +1,46 @@
+{
+  "name": "gulp-ts-extension",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "build": "cross-env TS_NODE_PROJECT=tsconfig.json gulp build",
+    "build:withoutminified": "cross-env TS_NODE_PROJECT=tsconfig.json gulp build --minify=false",
+    "watch": "cross-env TS_NODE_PROJECT=tsconfig.json gulp watch --sourcemap=true",
+    "watch:withoutminified": "cross-env TS_NODE_PROJECT=tsconfig.json gulp watch --minify=false --sourcemap=true"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4.1.3",
+    "@types/chrome": "^0.0.313",
+    "@types/gulp": "^4.0.17",
+    "@types/gulp-clean-css": "^4.3.4",
+    "@types/gulp-if": "^3.0.4",
+    "@types/gulp-postcss": "^8.0.6",
+    "@types/gulp-terser": "^1.2.6",
+    "@types/jquery": "^3.5.32",
+    "@types/minimist": "^1.2.5",
+    "@types/node": "^22.13.13",
+    "autoprefixer": "^10.4.21",
+    "cross-env": "^7.0.3",
+    "esbuild": "^0.25.2",
+    "gulp": "^5.0.0",
+    "gulp-clean-css": "^4.3.0",
+    "gulp-esbuild": "^0.14.0",
+    "gulp-postcss": "^10.0.0",
+    "gulp-terser": "^2.1.0",
+    "gulp-typescript": "^6.0.0-alpha.1",
+    "minimist": "^1.2.8",
+    "mongoose": "^8.13.3",
+    "postcss": "^8.5.3",
+    "tailwindcss": "^4.1.3",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.8.2"
+  },
+  "dependencies": {
+    "@tailwindcss/cli": "^4.1.3",
+    "jquery": "^3.7.1"
+  }
+}

@@ -1,0 +1,27 @@
+{
+  "name": "Boiler plate Extension ",
+  "description": "boiler plate",
+  "version": "1.0.0",
+  "manifest_version": 3,
+  "permissions": ["cookies", "activeTab", "storage", "tabs"],
+  "incognito": "split",
+  "host_permissions": ["<all_urls>"],
+  "content_scripts": [
+    {
+      "matches": ["*://*/*"],
+      "run_at": "document_end",
+      "all_frames": false,
+      "js": ["js/content_bundle.min.js"],
+      "css": []
+    }
+  ],
+  "background": {
+    "service_worker": "js/background_bundle.min.js"
+  },
+  "web_accessible_resources": [
+    {
+      "resources": ["styles/*", "icons/*", "lib/*"],
+      "matches": ["*://*/*"]
+    }
+  ]
+}
