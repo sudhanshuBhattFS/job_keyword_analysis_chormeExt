@@ -1,6 +1,7 @@
 import $ from "jquery";
 import { KeywordToolPanel } from "./tabs";
 import { setupGlobalEventDelegation } from "./event-handler";
+import { dragElement } from "../../utils/draggable";
 var $JQ = $.noConflict();
 
 export class customPopup {
@@ -77,6 +78,11 @@ export async function attachPopup(isLoggedIn: boolean) {
     );
 
     shadow.innerHTML = popupHtml;
+
+    // ⛳ Drag setup using #job-keyword-analysis-popup inside shadow DOM
+    const dragTarget = shadow.getElementById("job-keyword-analysis-popup");
+    if (dragTarget) dragElement(dragTarget);
+
     setupGlobalEventDelegation($JQ, shadow);
   } else if (shadowRootRef) {
     // Already initialized: just replace inner body
@@ -86,6 +92,13 @@ export async function attachPopup(isLoggedIn: boolean) {
         ? KeywordToolPanel.render(shadowRootRef)
         : customPopup.loggedOutBody();
     }
+
+    // ⛳ Drag setup again
+    const dragTarget = shadowRootRef.getElementById(
+      "job-keyword-analysis-popup"
+    );
+    if (dragTarget) dragElement(dragTarget);
+
     setupGlobalEventDelegation($JQ, shadowRootRef);
   }
 }

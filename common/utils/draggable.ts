@@ -4,8 +4,10 @@ export function dragElement(ele) {
     pos3 = 0,
     pos4 = 0;
 
-  if (document.getElementById(ele.id + "header")) {
-    const header = document.getElementById(ele.id + "header");
+  if (document.getElementById(ele.id + "job-keyword-analysis-popup")) {
+    const header = document.getElementById(
+      ele.id + "job-keyword-analysis-popup"
+    );
     if (header) {
       header.onmousedown = dragMouseDown;
     }
