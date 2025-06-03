@@ -51,7 +51,7 @@ export class KeywordToolPanel {
   static renderAnalyseTab(): string {
     return `
     <div class="tab-pane fade" id="analyse-tab-pane" role="tabpanel" aria-labelledby="analyse-tab" tabindex="0">
-      <div class="d-flex flex-column justify-content-center align-items-center gap-3 min-vh-25 w-100 px-3">
+      <div class="d-flex flex-column justify-content-center align-items-center gap-3 min-vh-25 w-100 ">
         <div 
           id="analyse-status-message" 
           class="w-100 p-3 heading  border rounded"
