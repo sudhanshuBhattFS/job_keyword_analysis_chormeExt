@@ -71,6 +71,16 @@ body,
     padding: 10px;
 }
 
+#whitelist-badges{
+    max-height: 150px;
+    overflow: auto;
+}
+
+#blacklist-badges{
+      max-height: 150px;
+    overflow: auto;
+}
+
 .bg-accent {
   background-color: var(--color-accent) !important;
 }
