@@ -43,9 +43,8 @@ export const config = [
     jobPortal: "Indeed",
     validUrlPatterns: [
       "^https:\\/\\/in\\.indeed\\.com\\/?$",
-      "^https:\\/\\/in\\.indeed\\.com\\/viewjob\\?vjk=[a-zA-Z0-9]+(&amp;)?advn=\\d+",
+      "^https:\\/\\/in\\.indeed\\.com\\/\\?(?=.*vjk=[a-zA-Z0-9]+)(?=.*advn=\\d+).*$",
     ],
-
     selectors: {
       jobTitle: {
         selector: 'h2[data-testid="jobsearch-JobInfoHeader-title"]',

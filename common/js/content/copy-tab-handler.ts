@@ -23,7 +23,7 @@ export class CopyTabPanel {
           </button>
         </div>
 
-        <div id='copy-job-details' class="my-4">
+        <div id='copy-job-details' >
         </div>
       </div>
 
@@ -55,7 +55,7 @@ export class CopyTabPanel {
     const description = getText(config.selectors.description.selector);
 
     const html = `
-    <div class="card mb-3 shadow-sm">
+    <div class="card mb-3 shadow-sm my-4">
       <h6 class="text-center mb-2 heading">Job Details</h6>
       <div class="card-body">
       <div class="row mb-2"><div class="col-4 fw-semibold">Job Title:</div><div class="col-8">${title}</div></div>
