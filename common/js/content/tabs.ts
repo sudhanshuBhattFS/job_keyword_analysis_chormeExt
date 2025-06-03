@@ -1,6 +1,7 @@
 import { MessageBridge } from "./messageBridge";
 import type { tabData } from "./type.ts";
 import { customPopup } from "./ext_popup.ts";
+import { CopyTabPanel } from "./copy-tab-handler.ts";
 
 export class KeywordToolPanel {
   // Render full panel HTML (initial)
@@ -16,7 +17,7 @@ export class KeywordToolPanel {
   // Tab headers
   static renderTabHeaders(): string {
     return `
-      <ul class="nav nav-tabs" id="keywordToolTabs" role="tablist">
+      <ul class="nav nav-tabs p-2" id="keywordToolTabs" role="tablist">
         <li class="nav-item" role="presentation">
           <button class="nav-link active" id="copy-tab" data-bs-target="#copy-tab-pane" type="button" role="tab" aria-controls="copy-tab-pane" aria-selected="true">
             Copy
@@ -39,33 +40,38 @@ export class KeywordToolPanel {
   // Tab contents wrapper (Keyword Manager only inside Settings tab)
   static renderTabContents(): string {
     return `
-      <div class="tab-content p-3 bg-custom-light" id="keywordToolTabsContent" style="min-height: 150px;">
-        ${this.renderCopyTab()}
+      <div class="tab-content p-3 bg-custom-light" id="keywordToolTabsContent" >
+        ${CopyTabPanel.renderCopyTab()}
         ${this.renderAnalyseTab()}
         ${this.renderSettingsTab()}
       </div>
     `;
   }
 
-  // Copy tab (initially shows spinner, actual data loaded async)
-  static renderCopyTab(): string {
+  static renderAnalyseTab(): string {
     return `
-      <div class="tab-pane fade show active" id="copy-tab-pane" role="tabpanel" aria-labelledby="copy-tab" tabindex="0">
-        <div class="d-flex justify-content-center align-items-center" style="min-height: 150px;">
-          <div class="spinner-border text-primary" role="status">
-            <span class="visually-hidden">Loading...</span>
-          </div>
+    <div class="tab-pane fade" id="analyse-tab-pane" role="tabpanel" aria-labelledby="analyse-tab" tabindex="0">
+      <div class="d-flex flex-column justify-content-center align-items-center gap-3 min-vh-25 w-100 px-3">
+        <div 
+          id="analyse-status-message" 
+          class="w-100 p-3 heading  border rounded"
+        >
+          Click the button to analyse keywords from the job description.
         </div>
+        <button id="analyse-job-description-btn" class="btn btn-secondary heading w-100">
+          Analyse
+        </button>
       </div>
-    `;
+    </div>
+  `;
   }
 
   // Analyse tab placeholder
-  static renderAnalyseTab(): string {
+  static renderAnalyseKeywords(): string {
     return `
     <div class="tab-pane fade " id="analyse-tab-pane" role="tabpanel" aria-labelledby="analyse-tab" tabindex="0">
       <div id="analysis-whitelist-section">
-        <h4 class="heading text-center w-full m-0">Whitelist Keywords</h4>
+        <h6 class="heading text-center w-full m-0">Whitelist Keywords</h6>
         <div class="badge-container card-body bg-white ">
           <span id="analysis-whitelist-badge-1" class="badge bg-accent p-2 rounded-pill">Team Player</span>
           <span id="analysis-whitelist-badge-2" class="badge bg-accent p-2 rounded-pill">Agile</span>
@@ -76,7 +82,7 @@ export class KeywordToolPanel {
       <hr class="my-2" />
 
       <div id="analysis-blacklist-section" style="margin-top: 1rem;">
-        <h4 class="heading text-center w-full m-0">Blacklist Keywords</h4>
+        <h6 class="heading text-center w-full m-0">Blacklist Keywords</h6>
         <div class="badge-container  card-body bg-white">
           <span id="analysis-blacklist-badge-1" class="badge bg-danger p-2 rounded-pill">Micromanage</span>
           <span id="analysis-blacklist-badge-2" class="badge bg-danger p-2 rounded-pill">Overtime</span>
@@ -92,10 +98,10 @@ export class KeywordToolPanel {
     return `
       <div class="tab-pane fade" id="settings-tab-pane" role="tabpanel" aria-labelledby="settings-tab" tabindex="0">
         <div class="bg-light card bg-white">
-          <h4 class="text-center mb-2 heading card-title">Keyword Manager</h4>
+          <h6 class="text-center mb-2 heading card-title">Keyword Manager</h6>
           <div class="card-body py-4 px-3 shadow-sm w-100" >
             <div class="">
-              <h5>Whitelist Keywords</h5>
+              <h6>Whitelist Keywords</h6>
               <div class="input-group mb-2">
                 <input type="text" id="whitelist-input" class="form-control" placeholder="Add whitelist keyword" />
                 <button id="add-whitelist" class="btn btn-success">Add</button>
@@ -106,7 +112,7 @@ export class KeywordToolPanel {
             <hr />
 
             <div class="">
-              <h5>Blacklist Keywords</h5>
+              <h6>Blacklist Keywords</h6>
               <div class="input-group mb-2">
                 <input type="text" id="blacklist-input" class="form-control" placeholder="Add blacklist keyword" />
                 <button id="add-blacklist" class="btn btn-danger">Add</button>
@@ -126,7 +132,7 @@ export class KeywordToolPanel {
     const tabPanes = shadowRoot.querySelectorAll<HTMLElement>(".tab-pane");
 
     // Load Copy tab data once on initialization (because it's active by default)
-    this.loadCopyTabData(shadowRoot);
+    // this.loadCopyTabData(shadowRoot);
 
     tabButtons.forEach((button) => {
       button.addEventListener("click", async () => {
@@ -145,7 +151,7 @@ export class KeywordToolPanel {
         // Handle tab-specific logic
         switch (button.id) {
           case "copy-tab":
-            await this.loadCopyTabData(shadowRoot);
+            // await this.loadCopyTabData(shadowRoot);
             break;
           case "analyse-tab":
             // Future: Load or update analysis UI here
@@ -159,41 +165,4 @@ export class KeywordToolPanel {
   }
 
   // Load data for Copy tab and update UI
-  static async loadCopyTabData(shadowRoot: ShadowRoot): Promise<void> {
-    let tabData: tabData | null = null;
-
-    try {
-      const response = await MessageBridge.sendToServiceWorker(
-        { type: "getTabData" },
-        true
-      );
-      tabData = response as tabData;
-    } catch (error) {
-      console.error("Failed to load tab data", error);
-    }
-
-    const { name, location, title, description } = tabData || {
-      name: "N/A",
-      location: "N/A",
-      title: "N/A",
-      description: "N/A",
-    };
-
-    const html = `
-      <div class="card mb-3 shadow-sm">
-       <h4 class="text-center mb-2 heading">User Details</h4>
-        <div class="card-body">
-          <div class="row mb-2"><div class="col-4 fw-semibold">Name:</div><div class="col-8">${name}</div></div>
-          <div class="row mb-2"><div class="col-4 fw-semibold">Location:</div><div class="col-8">${location}</div></div>
-          <div class="row mb-2"><div class="col-4 fw-semibold">Title:</div><div class="col-8">${title}</div></div>
-          <div class="row"><div class="col-4 fw-semibold">Description:</div><div class="col-8">${description}</div></div>
-        </div>
-      </div>
-    `;
-
-    const container = shadowRoot.getElementById("copy-tab-pane");
-    if (container) {
-      container.innerHTML = html;
-    }
-  }
 }

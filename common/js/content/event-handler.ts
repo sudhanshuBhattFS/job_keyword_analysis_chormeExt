@@ -4,6 +4,8 @@ import {
   handleAddWhitelist,
   handleBadgeRemove,
 } from "./badge-handlers";
+import { handleCopyJob } from "./copy-tab-handler";
+
 import { KeywordToolPanel } from "./tabs";
 
 export function setupGlobalEventDelegation($JQ, shadowRoot: ShadowRoot) {
@@ -30,6 +32,10 @@ export function setupGlobalEventDelegation($JQ, shadowRoot: ShadowRoot) {
         match: () =>
           target.matches("#loginBtn_job_keyword") && target.closest("form"),
         handler: () => handleLogin($),
+      },
+      {
+        match: () => target.matches("#copy-job-description-btn"),
+        handler: () => handleCopyJob($, shadowRoot),
       },
     ];
 

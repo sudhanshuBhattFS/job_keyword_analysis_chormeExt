@@ -1,26 +1,60 @@
 import { MessageBridge } from "./messageBridge";
 import { LocalDb } from "./localDb";
 import { tabData } from "./data";
+import { config } from "./config";
+
+// ✅ Immediately reload matching job portal tabs on extension startup
+chrome.tabs.query({}, (tabs) => {
+  tabs.forEach((tab) => {
+    if (!tab.url || !tab.id) return;
+
+    const tabUrl = tab.url.toLowerCase();
+
+    for (const portal of config) {
+      const portalName = portal.jobPortal.toLowerCase();
+
+      if (tabUrl.includes(portalName)) {
+        chrome.tabs.reload(tab.id);
+        break;
+      }
+    }
+  });
+});
 
 // Set up a listener
 MessageBridge.onMessage(async (request, sender) => {
-  const tabId = sender.tab?.id ?? undefined;
-  const senderUrl = sender.tab?.url ?? null;
+  const tabId = sender.tab?.id;
+  const currentUrl = sender.tab?.url || "";
+
   console.log("request", request);
+  console.log("Sender tab URL:", currentUrl);
+
   switch (request?.type) {
     case "isLoggedIn": {
       const isLoggedIn = await LocalDb.getLoggedIn();
 
-      MessageBridge.sendToContentScript(
-        tabId,
-        {
-          type: "initPopup",
-          data: {
-            isLoggedIn: isLoggedIn ?? false,
-          },
-        },
-        false
+      const matchedConfig = config.find((item) =>
+        currentUrl.includes(item.jobPortal.toLowerCase())
       );
+
+      console.log("isLoggedIn", isLoggedIn, "matchedConfig", matchedConfig);
+
+      if (tabId) {
+        MessageBridge.sendToContentScript(
+          tabId,
+          {
+            type: "initPopup",
+            data: {
+              isLoggedIn: isLoggedIn ?? false,
+              config: matchedConfig,
+            },
+          },
+          false
+        );
+      } else {
+        console.warn("No tabId found for sender.");
+      }
+
       return;
     }
 
@@ -47,6 +81,6 @@ MessageBridge.onMessage(async (request, sender) => {
     }
 
     default:
-      return; // Unhandled type
+      return;
   }
 });

@@ -20,7 +20,7 @@ export class customPopup {
     return `
       <div class="">
         <div class="card p-4 shadow-sm w-100" >
-          <h4 class="text-center mb-2">Login</h3>
+          <h6 class="text-center mb-2">Login</h6>
           <form>
             <div class="mb-3">
               <label for="email" class="form-label">Email address</label>
@@ -41,7 +41,7 @@ export class customPopup {
     return `
       {{{styles}}}
       <div class="top-right-popup" id="job-keyword-analysis-popup">
-         <div id="popup-body" class="bg-custom-light">
+         <div id="popup-body" class="bg-color-light">
           {{{body}}}
          </div>
       </div>
