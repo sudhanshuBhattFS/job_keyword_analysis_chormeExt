@@ -1,36 +1,82 @@
+/* =======================
+   Base Variables
+======================= */
+:root {
+  /* Typography */
+  --font-family: 'Arial', sans-serif;
+  --font-size-base: 14px;
+  --font-size-sm: 0.875rem;
+
+  /* Theme Colors (Unique Palette) */
+  --color-heading: #1d3557;  /* Deep Navy */
+  --color-primary: #457b9d;  /* Muted Blue */
+  --color-bg: #f1faee;       /* Soft Cream */
+  --color-accent: #a8dadc;   /* Aqua Mist */
+  --color-danger: #e63946;   /* Coral Red */
+  --color-muted: #6c757d;    /* Bootstrap muted gray */
+  --color-text: #212529;     /* Bootstrap dark text */
+
+  /* UI Elements */
+  --color-border: #e5e7eb;
+  --color-shadow: rgba(0, 0, 0, 0.1);
+  --border-radius: 0.375rem;
+  --z-index-popup: 9999;
+}
+
+/* =======================
+   Base Font Styling
+======================= */
+body,
+:host {
+  font-family: var(--font-family) !important;
+  font-size: var(--font-size-base) !important;
+  color: var(--color-text);
+  background-color: var(--color-bg);
+}
+
+/* =======================
+   Popup Styling
+======================= */
 .top-right-popup {
   position: fixed;
-  top: 0px;
-  right: 0px;
-}
-
-body {
-  font-family: Arial, sans-serif;
-}
-
-:host {
-  font-size: 16px !important; 
-}
-
-
-#job-keyword-analysis-popup{
-  max-width: 300px !important;
+  top: 0;
+  right: 0;
 }
 
 #job-keyword-analysis-popup {
-  width: 20rem; /* Set width of the popup */
-  background-color: #f7f7f7 !important;
-  border-radius: 0.375rem; /* Rounded corners */
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1); /* Shadow for depth */
-  border: 1px solid #e5e7eb; /* Light gray border */
-  z-index: 9999;
+  max-width: 300px !important;
+  width: 20rem;
+  background-color: var(--color-bg) !important;
+  border-radius: var(--border-radius);
+  box-shadow: 0 2px 10px var(--color-shadow);
+  border: 1px solid var(--color-border);
+  z-index: var(--z-index-popup);
   position: fixed;
-  top: 0; /* Position it near the top of the page */
-  right: 0; /* Position it near the right of the page */
+  top: 0;
+  right: 0;
   text-align: left;
-  font-size: 0.875rem; /* Small font size */
+  font-size: var(--font-size-sm);
 }
 
-#job-keyword-analysis{
-    z-index: 9999 !important;
+#job-keyword-analysis {
+  z-index: var(--z-index-popup) !important;
+}
+
+/* =======================
+   Example Usage Classes
+======================= */
+.heading {
+  color: var(--color-heading);
+}
+
+.bg-accent {
+  background-color: var(--color-accent) !important;
+}
+
+.text-primary {
+  color: var(--color-primary) !important;
+}
+
+.text-danger {
+  color: var(--color-danger) !important;
 }
