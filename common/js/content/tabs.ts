@@ -6,7 +6,7 @@ export class KeywordToolPanel {
   // Render full panel HTML (initial)
   static render(shadowRoot: ShadowRoot): string {
     return `
-      <div id="keyword-tool-tabs-wrapper" class="card  shadow-sm">
+      <div id="keyword-tool-tabs-wrapper" class="card bg-custom-light shadow-sm">
         ${this.renderTabHeaders()}
         ${this.renderTabContents()}
       </div>
@@ -39,7 +39,7 @@ export class KeywordToolPanel {
   // Tab contents wrapper (Keyword Manager only inside Settings tab)
   static renderTabContents(): string {
     return `
-      <div class="tab-content p-3" id="keywordToolTabsContent" style="min-height: 150px;">
+      <div class="tab-content p-3 bg-custom-light" id="keywordToolTabsContent" style="min-height: 150px;">
         ${this.renderCopyTab()}
         ${this.renderAnalyseTab()}
         ${this.renderSettingsTab()}
@@ -63,20 +63,38 @@ export class KeywordToolPanel {
   // Analyse tab placeholder
   static renderAnalyseTab(): string {
     return `
-      <div class="tab-pane fade" id="analyse-tab-pane" role="tabpanel" aria-labelledby="analyse-tab" tabindex="0">
-        <p>Analysis result will appear here...</p>
+    <div class="tab-pane fade " id="analyse-tab-pane" role="tabpanel" aria-labelledby="analyse-tab" tabindex="0">
+      <div id="analysis-whitelist-section">
+        <h4 class="heading text-center w-full m-0">Whitelist Keywords</h4>
+        <div class="badge-container card-body bg-white ">
+          <span id="analysis-whitelist-badge-1" class="badge bg-accent p-2 rounded-pill">Team Player</span>
+          <span id="analysis-whitelist-badge-2" class="badge bg-accent p-2 rounded-pill">Agile</span>
+          <span id="analysis-whitelist-badge-3" class="badge bg-accent p-2 rounded-pill">Problem Solver</span>
+        </div>
       </div>
-    `;
+
+      <hr class="my-2" />
+
+      <div id="analysis-blacklist-section" style="margin-top: 1rem;">
+        <h4 class="heading text-center w-full m-0">Blacklist Keywords</h4>
+        <div class="badge-container  card-body bg-white">
+          <span id="analysis-blacklist-badge-1" class="badge bg-danger p-2 rounded-pill">Micromanage</span>
+          <span id="analysis-blacklist-badge-2" class="badge bg-danger p-2 rounded-pill">Overtime</span>
+          <span id="analysis-blacklist-badge-3" class="badge bg-danger p-2 rounded-pill">Fast-paced</span>
+        </div>
+      </div>
+    </div>
+  `;
   }
 
   // Settings tab now includes the Keyword Manager UI
   static renderSettingsTab(): string {
     return `
       <div class="tab-pane fade" id="settings-tab-pane" role="tabpanel" aria-labelledby="settings-tab" tabindex="0">
-        <div class="bg-light p-4">
-          <h4 class="text-center mb-4">Keyword Manager</h4>
-          <div class="card p-4 shadow-sm w-100" >
-            <div class="mb-4">
+        <div class="bg-light card bg-white">
+          <h4 class="text-center mb-2 heading card-title">Keyword Manager</h4>
+          <div class="card-body py-4 px-3 shadow-sm w-100" >
+            <div class="">
               <h5>Whitelist Keywords</h5>
               <div class="input-group mb-2">
                 <input type="text" id="whitelist-input" class="form-control" placeholder="Add whitelist keyword" />
@@ -87,7 +105,7 @@ export class KeywordToolPanel {
 
             <hr />
 
-            <div class="mb-2">
+            <div class="">
               <h5>Blacklist Keywords</h5>
               <div class="input-group mb-2">
                 <input type="text" id="blacklist-input" class="form-control" placeholder="Add blacklist keyword" />
@@ -163,8 +181,8 @@ export class KeywordToolPanel {
 
     const html = `
       <div class="card mb-3 shadow-sm">
+       <h4 class="text-center mb-2 heading">User Details</h4>
         <div class="card-body">
-          <h5 class="card-title">User Details</h5>
           <div class="row mb-2"><div class="col-4 fw-semibold">Name:</div><div class="col-8">${name}</div></div>
           <div class="row mb-2"><div class="col-4 fw-semibold">Location:</div><div class="col-8">${location}</div></div>
           <div class="row mb-2"><div class="col-4 fw-semibold">Title:</div><div class="col-8">${title}</div></div>

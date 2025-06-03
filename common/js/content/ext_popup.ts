@@ -41,7 +41,7 @@ export class customPopup {
     return `
       {{{styles}}}
       <div class="top-right-popup" id="job-keyword-analysis-popup">
-         <div id="popup-body">
+         <div id="popup-body" class="bg-custom-light">
           {{{body}}}
          </div>
       </div>

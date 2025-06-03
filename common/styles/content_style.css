@@ -1,7 +1,7 @@
 /* =======================
    Base Variables
 ======================= */
-:root {
+:host {
   /* Typography */
   --font-family: 'Arial', sans-serif;
   --font-size-base: 14px;
@@ -10,7 +10,7 @@
   /* Theme Colors (Unique Palette) */
   --color-heading: #1d3557;  /* Deep Navy */
   --color-primary: #457b9d;  /* Muted Blue */
-  --color-bg: #f1faee;       /* Soft Cream */
+  --color-bg: #f8f9fa;       /* Soft Cream */
   --color-accent: #a8dadc;   /* Aqua Mist */
   --color-danger: #e63946;   /* Coral Red */
   --color-muted: #6c757d;    /* Bootstrap muted gray */
@@ -44,7 +44,7 @@ body,
 }
 
 #job-keyword-analysis-popup {
-  max-width: 300px !important;
+  max-width: 550px !important;
   width: 20rem;
   background-color: var(--color-bg) !important;
   border-radius: var(--border-radius);
@@ -66,11 +66,17 @@ body,
    Example Usage Classes
 ======================= */
 .heading {
-  color: var(--color-heading);
+    background-color: var(--color-heading);
+    color: white;
+    padding: 10px;
 }
 
 .bg-accent {
   background-color: var(--color-accent) !important;
+}
+
+.bg-custom-light {
+  background-color: var(--color-bg) !important;
 }
 
 .text-primary {
