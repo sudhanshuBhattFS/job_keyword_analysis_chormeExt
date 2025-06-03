@@ -11,11 +11,11 @@ MessageBridge.onMessage(async (request) => {
   switch (request?.type) {
     case "initPopup": {
       const config = request.data.config;
-
-      const configStore = ConfigStore.getInstance();
-      configStore.setConfig(config);
-      attachPopup(request.data.isLoggedIn || false);
-
+      if (matchUrlPattern(config)) {
+        const configStore = ConfigStore.getInstance();
+        configStore.setConfig(config);
+        attachPopup(request.data.isLoggedIn || false);
+      }
       break;
     }
 
