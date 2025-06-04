@@ -3,7 +3,7 @@ export const config = [
         jobPortal: "LinkedIn",
         validUrlPatterns: [
             "^https:\\/\\/www\\.linkedin\\.com\\/jobs\\/search\\?",
-            "/^https:\\/\\/www\\.linkedin\\.com\\/jobs\\/collections\\/recommended\\/\\?currentJobId=\\d+$/",
+            "^https:\\/\\/www\\.linkedin\\.com\\/jobs\\/collections\\/recommended\\/?",
         ],
         selectors: {
             jobTitle: {
