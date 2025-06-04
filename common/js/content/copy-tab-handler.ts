@@ -1,7 +1,10 @@
 import { ConfigStore } from "./config-handling";
 import $ from "jquery";
 import { MessageBridge } from "./messageBridge";
-import { highlightAndCountKeywords } from "./highlight/highlight";
+import {
+  highlightAndCountKeywords,
+  KeywordMatchCount,
+} from "./highlight/highlight";
 export function handleCopyJob($: Function, shadowRoot: ShadowRoot): void {
   const $copyButton = $("#copy-btn-panel");
 
@@ -12,8 +15,7 @@ export async function handleAnalyseJob(
   $: Function,
   shadowRoot: ShadowRoot
 ): Promise<void> {
-  console.log("Analyse job description button clicked.");
-  CopyTabPanel.highlightAnalysisJobDescription();
+  CopyTabPanel.highlightAnalysisJobDescription(shadowRoot);
 }
 
 export class CopyTabPanel {
@@ -42,7 +44,7 @@ export class CopyTabPanel {
      </div>
 
 
-        <div id='copy-job-details' >
+        <div id='display-list' >
         </div>
       </div>
 
@@ -58,10 +60,18 @@ export class CopyTabPanel {
       return;
     }
 
-    function getText(selector: string): string {
-      const ele = $(selector);
-      if (ele.length === 0) return "N/A";
-      return (ele[0].textContent || "").trim() || "N/A";
+    function getText(selectors: string | string[]): string {
+      const selArr = Array.isArray(selectors) ? selectors : [selectors];
+
+      for (const sel of selArr) {
+        const ele = $(sel);
+        if (ele.length > 0) {
+          const text = ele[0].textContent?.trim();
+          if (text) return text;
+        }
+      }
+
+      return "N/A";
     }
 
     const companyName = getText(config.selectors.companyName.selector);
@@ -79,7 +89,9 @@ export class CopyTabPanel {
     }
   }
 
-  static async highlightAnalysisJobDescription() {
+  static async highlightAnalysisJobDescription(
+    shadowRoot: ShadowRoot
+  ): Promise<void> {
     const configStore = ConfigStore.getInstance();
     const config = configStore.getConfig();
 
@@ -101,13 +113,26 @@ export class CopyTabPanel {
         ),
       ]);
 
-      const result = highlightAndCountKeywords(
+      const result: KeywordMatchCount = highlightAndCountKeywords(
         selector,
         whitelist || [],
         blacklist || []
       );
 
       console.log("Highlighting complete. Match counts:", result);
+
+      const displayList = shadowRoot.querySelector("#display-list");
+
+      if (displayList) {
+        displayList.innerHTML = `
+        <div class="alert alert-light border d-flex justify-content-around my-4">
+          <button class="btn btn-primary   bg-success ">Whitelist: ${result.whitelistCount}</button>
+          <button class="btn btn-primary   bg-danger ">Blacklist: ${result.blacklistCount}</button>
+        </div>
+      `;
+      } else {
+        console.warn("#display-list not found inside Shadow DOM.");
+      }
     } catch (err) {
       console.error(
         "Failed to fetch keywords or highlight job description:",

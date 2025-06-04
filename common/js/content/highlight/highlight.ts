@@ -4,15 +4,37 @@ export interface KeywordMatchCount {
 }
 
 export function highlightAndCountKeywords(
-  selector: string,
+  selector: string | string[],
   whitelist: string[],
   blacklist: string[]
 ): KeywordMatchCount {
-  const elements = document.querySelectorAll<HTMLElement>(selector);
-  console.log("check_elements", elements);
+  const selectors = Array.isArray(selector) ? selector : [selector];
+  const elements: HTMLElement[] = [];
 
-  let whitelistCount = 0;
-  let blacklistCount = 0;
+  selectors.forEach((sel) => {
+    document
+      .querySelectorAll<HTMLElement>(sel)
+      .forEach((el) => elements.push(el));
+  });
+
+  const whitelistMatched = new Set<string>();
+  const blacklistMatched = new Set<string>();
+
+  // 1. Unwrap existing highlights inside elements
+  elements.forEach((el) => {
+    const oldHighlights = el.querySelectorAll(
+      'span[data-highlight-id="keyword-highlight"]'
+    );
+    oldHighlights.forEach((span) => {
+      const parent = span.parentNode;
+      if (!parent) return;
+      // Replace the span with its text content (unwrap)
+      while (span.firstChild) {
+        parent.insertBefore(span.firstChild, span);
+      }
+      parent.removeChild(span);
+    });
+  });
 
   const createRegex = (words: string[]): RegExp | null => {
     if (!words.length) return null;
@@ -35,54 +57,56 @@ export function highlightAndCountKeywords(
 
     textNodes.forEach((textNode) => {
       const parent = textNode.parentElement;
+      if (!parent) return;
+
       const originalText = textNode.textContent ?? "";
 
-      const whiteMatches = whitelistRegex?.test(originalText) ?? false;
-      const blackMatches = blacklistRegex?.test(originalText) ?? false;
+      const whiteMatches = originalText.match(whitelistRegex ?? /$^/) || [];
+      const blackMatches = originalText.match(blacklistRegex ?? /$^/) || [];
 
-      if (!whiteMatches && !blackMatches) return;
+      whiteMatches.forEach((word) => whitelistMatched.add(word.toLowerCase()));
+      blackMatches.forEach((word) => blacklistMatched.add(word.toLowerCase()));
 
-      // Reset regex state
-      whitelistRegex?.lastIndex && (whitelistRegex.lastIndex = 0);
-      blacklistRegex?.lastIndex && (blacklistRegex.lastIndex = 0);
-
-      whitelistCount += (originalText.match(whitelistRegex ?? /$^/) || [])
-        .length;
-      blacklistCount += (originalText.match(blacklistRegex ?? /$^/) || [])
-        .length;
+      if (!whiteMatches.length && !blackMatches.length) return;
 
       let replaced = originalText;
+
       if (whitelistRegex) {
         replaced = replaced.replace(
           whitelistRegex,
-          (match) => `<span style="
-            background-color: #e6ffec;
-            color: #065f46;
-            font-weight: 600;
-            padding: 2px 4px;
-            border-radius: 4px;
-          ">${match}</span>`
+          (match) =>
+            `<span data-highlight-id="keyword-highlight" style="
+              background-color: #e6ffec;
+              color: #065f46;
+              font-weight: 600;
+              padding: 2px 4px;
+              border-radius: 4px;
+            ">${match}</span>`
         );
       }
 
       if (blacklistRegex) {
         replaced = replaced.replace(
           blacklistRegex,
-          (match) => `<span style="
-            background-color: #ffe6e6;
-            color: #7f1d1d;
-            font-weight: 600;
-            padding: 2px 4px;
-            border-radius: 4px;
-          ">${match}</span>`
+          (match) =>
+            `<span data-highlight-id="keyword-highlight" style="
+              background-color: #ffe6e6;
+              color: #7f1d1d;
+              font-weight: 600;
+              padding: 2px 4px;
+              border-radius: 4px;
+            ">${match}</span>`
         );
       }
 
       const temp = document.createElement("span");
       temp.innerHTML = replaced;
-      parent?.replaceChild(temp, textNode);
+      parent.replaceChild(temp, textNode);
     });
   });
 
-  return { whitelistCount, blacklistCount };
+  return {
+    whitelistCount: whitelistMatched.size,
+    blacklistCount: blacklistMatched.size,
+  };
 }

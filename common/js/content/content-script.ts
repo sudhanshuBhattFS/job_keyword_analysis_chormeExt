@@ -11,6 +11,7 @@ MessageBridge.onMessage(async (request) => {
   switch (request?.type) {
     case "initPopup": {
       const config = request.data.config;
+      console.log(matchUrlPattern(config), "MATCH_CONFIG");
       if (matchUrlPattern(config)) {
         const configStore = ConfigStore.getInstance();
         configStore.setConfig(config);
