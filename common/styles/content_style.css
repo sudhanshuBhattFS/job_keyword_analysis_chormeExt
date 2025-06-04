@@ -65,6 +65,11 @@ body,
 /* =======================
    Example Usage Classes
 ======================= */
+.hint-heading{
+  background-color: var(--color-primary) !important;
+  color: white;
+}
+
 .heading {
     background-color: var(--color-heading) !important;
     color: white;

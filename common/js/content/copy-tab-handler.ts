@@ -27,9 +27,10 @@ export class CopyTabPanel {
      <div id="copy-btn-panel" class="d-flex flex-column justify-content-center align-items-center gap-3 min-vh-25 w-100">
        <div 
          id="copy-status-message" 
-         class="w-100 p-3 heading border rounded"
+         class="w-100 p-3 hint-heading border rounded"
        >
-         Click the button to copy the job description.
+         Click copy to get job details. <br/>
+         Click analyse to check matching keywords.
        </div>
      
        <!-- Wrap buttons in a row container -->
