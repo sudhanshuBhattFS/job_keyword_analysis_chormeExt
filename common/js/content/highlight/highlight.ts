@@ -56,8 +56,8 @@ export function highlightAndCountKeywords(
         replaced = replaced.replace(
           whitelistRegex,
           (match) => `<span style="
-            background-color: #e6ffec;
-            color: #065f46;
+            background-color: green;
+            color: white;
             font-weight: 600;
             padding: 2px 4px;
             border-radius: 4px;
@@ -69,8 +69,8 @@ export function highlightAndCountKeywords(
         replaced = replaced.replace(
           blacklistRegex,
           (match) => `<span style="
-            background-color: #ffe6e6;
-            color: #7f1d1d;
+            background-color: red;
+            color: white;
             font-weight: 600;
             padding: 2px 4px;
             border-radius: 4px;
