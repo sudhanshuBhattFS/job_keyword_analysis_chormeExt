@@ -5,6 +5,7 @@ export const config = [
       "^https:\\/\\/www\\.linkedin\\.com\\/jobs\\/search\\/?\\?",
       "^https:\\/\\/www\\.linkedin\\.com\\/jobs\\/collections\\/recommended\\/?",
       "/^https:\\/\\/www\\.linkedin\\.com\\/jobs\\/search\\/\\?currentJobId=\\d+$/",
+      "^https://www\\.linkedin\\.com/jobs/remote-jobs/\\?currentJobId=\\d+$",
     ],
     selectors: {
       jobTitle: {
