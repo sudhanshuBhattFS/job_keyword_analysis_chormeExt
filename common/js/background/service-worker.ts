@@ -4,24 +4,6 @@ import { tabData } from "./data";
 import { config } from "./config";
 import { autoReloadTabs } from "./autoreload";
 
-// ✅ Immediately reload matching job portal tabs on extension startup
-chrome.tabs.query({}, (tabs) => {
-  tabs.forEach((tab) => {
-    if (!tab.url || !tab.id) return;
-
-    const tabUrl = tab.url.toLowerCase();
-
-    for (const portal of config) {
-      const portalName = portal.jobPortal.toLowerCase();
-
-      if (tabUrl.includes(portalName)) {
-        chrome.tabs.reload(tab.id);
-        break;
-      }
-    }
-  });
-});
-
 chrome.runtime.onInstalled.addListener(async (details) => {
   if (details.reason === "install" || details.reason === "update") {
     autoReloadTabs();
