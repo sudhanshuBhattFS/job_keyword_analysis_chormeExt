@@ -66,7 +66,7 @@ export const config = [
     {
         jobPortal: "ZipRecruiter",
         validUrlPatterns: [
-            "/^https:\\/\\/www\\.ziprecruiter\\.com\\/jobs\\/.+$/",
+            "^https:\\/\\/[^\\/]+\\.ziprecruiter\\.[a-z]+\\/jobs.*",
             "https:\\/\\/www\\.ziprecruiter\\.com\\/jobs-search\\?search(?:=[^&\\s]+)?",
         ],
         selectors: {
