@@ -2,7 +2,8 @@ export const config = [
   {
     jobPortal: "LinkedIn",
     validUrlPatterns: [
-      "/^https:\\/\\/www\\.linkedin\\.com\\/jobs\\/collections\\/recommended\\/\\?currentJobId=\\d+$/",
+      "^https:\\/\\/www\\.linkedin\\.com\\/jobs\\/search\\/?\\?",
+      "^https:\\/\\/www\\.linkedin\\.com\\/jobs\\/collections\\/recommended\\/?",
       "/^https:\\/\\/www\\.linkedin\\.com\\/jobs\\/search\\/\\?currentJobId=\\d+$/",
     ],
     selectors: {
@@ -55,9 +56,11 @@ export const config = [
   {
     jobPortal: "Indeed",
     validUrlPatterns: [
+      "^https:\\/\\/[a-z]+\\.indeed\\.com\\/.*\\?[^\\s]*vjk=[^&\\s]+",
       "^https?:\\/\\/([a-z]{2}\\.)?indeed\\.com\\/.*[?&]vjk=[a-zA-Z0-9]+.*",
       "^https?:\\/\\/([a-z]{2}\\.)?indeed\\.com\\/viewjob\\?[^#]*jk=[a-zA-Z0-9]+[^#]*$",
       "^https?:\\/\\/([a-z]{2}\\.)?indeed\\.com\\/jobs\\?q=[^&]+&l=[^&]*&sc=[^&]+&from=[^&]+&vjk=[a-zA-Z0-9]+(&.*)?$",
+      "https:\\/\\/[^\\/]+\\.indeed\\.com\\/viewjob\\?jk(?:=[^&\\s]+)?",
     ],
     selectors: {
       jobTitle: {
@@ -81,6 +84,8 @@ export const config = [
     jobPortal: "ZipRecruiter",
     validUrlPatterns: [
       "/^https:\\/\\/www\\.ziprecruiter\\.com\\/jobs\\/.+$/",
+      "https:\\/\\/www\\.ziprecruiter\\.com\\/jobs-search\\?search(?:=[^&\\s]+)?",
+      ,
       "^https?:\\/\\/www\\.ziprecruiter\\.com\\/jobs-search\\?search=[^&]+&location=[^&]+(&lk=[^&]+)?(&page=\\d+)?(&lvk=[^&]+)?$",
     ],
     selectors: {
