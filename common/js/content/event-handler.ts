@@ -4,7 +4,7 @@ import {
   handleAddWhitelist,
   handleBadgeRemove,
 } from "./badge-handlers";
-import { handleCopyJob } from "./copy-tab-handler";
+import { handleAnalyseJob, handleCopyJob } from "./copy-tab-handler";
 
 import { KeywordToolPanel } from "./tabs";
 
@@ -36,6 +36,10 @@ export function setupGlobalEventDelegation($JQ, shadowRoot: ShadowRoot) {
       {
         match: () => target.matches("#copy-job-description-btn"),
         handler: () => handleCopyJob($, shadowRoot),
+      },
+      {
+        match: () => target.matches("#analyse-job-description-btn"),
+        handler: () => handleAnalyseJob($, shadowRoot),
       },
     ];
 

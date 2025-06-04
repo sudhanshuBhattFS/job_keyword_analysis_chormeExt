@@ -7,24 +7,24 @@ export const config = [
     selectors: {
       jobTitle: {
         selector:
-          "h1.top-card-layout__title, h1.jobs-unified-top-card__job-title",
+          "div.t-24.job-details-jobs-unified-top-card__job-title h1.t-24.t-bold.inline a, h1.top-card-layout__title, h1.jobs-unified-top-card__job-title",
       },
       companyName: {
         selector:
-          "a.topcard__org-name-link, span.jobs-unified-top-card__company-name",
+          "div.job-details-jobs-unified-top-card__company-name a, a.topcard__org-name-link, span.jobs-unified-top-card__company-name",
       },
       location: {
         selector:
-          "span.topcard__flavor--bullet, span.jobs-unified-top-card__bullet",
+          "div.t-black--light.mt2.job-details-jobs-unified-top-card__tertiary-description-container > span > span.tvm__text.tvm__text--low-emphasis:first-child, span.topcard__flavor--bullet, span.jobs-unified-top-card__bullet",
+      },
+      description: {
+        selector: "div.jobs-box__html-content#job-details",
       },
     },
   },
   {
     jobPortal: "Glassdoor",
-    validUrlPatterns: [
-      "/^https:\\/\\/www\\.glassdoor\\.co\\.in\\/Job\\/index\\.htm$/",
-      "/^https:\\/\\/www\\.glassdoor\\.co\\.in\\/Job\\/.+\\.htm.*$/",
-    ],
+    validUrlPatterns: ["/^https://www.glassdoor(.[a-z.]+)?/Job/.+.htm.*$/"],
     selectors: {
       jobTitle: {
         selector:
@@ -42,8 +42,7 @@ export const config = [
   {
     jobPortal: "Indeed",
     validUrlPatterns: [
-      "^https:\\/\\/in\\.indeed\\.com\\/?$",
-      "^https:\\/\\/in\\.indeed\\.com\\/\\?(?=.*vjk=[a-zA-Z0-9]+)(?=.*advn=\\d+).*$",
+      "^https?:\\/\\/([a-z]{2}\\.)?indeed\\.com\\/.*[?&]vjk=[a-zA-Z0-9]+.*[?&]advn=\\d+.*",
     ],
     selectors: {
       jobTitle: {
