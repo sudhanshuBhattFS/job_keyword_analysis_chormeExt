@@ -31,7 +31,7 @@ export const config = [
         ],
       },
       description: {
-        selector: ["div.jobs-box__html-content#job-details"],
+        selector: ["div.jobs-search__job-details--container"],
       },
     },
   },
@@ -51,7 +51,7 @@ export const config = [
         selector: ["div[data-test='location']"],
       },
       description: {
-        selector: ['div[data-brandviews^="PAGE:n=joblisting-serp-page"]'],
+        selector: ['div[class^="JobDetails_jobDetailsContainer__"]'],
       },
     },
   },
@@ -78,7 +78,7 @@ export const config = [
         selector: ['div[data-testid="inlineHeader-companyLocation"] > div'],
       },
       description: {
-        selector: ["div#jobDescriptionText"],
+        selector: ["div#jobsearch-ViewjobPaneWrapper"],
       },
     },
   },
@@ -111,7 +111,7 @@ export const config = [
       description: {
         selector: [
           "div.job-body",
-          "div.flex.flex-col div.relative.flex.flex-col div.text-primary.whitespace-pre-line",
+          "div.col-md-9 > div.panel.panel-default.panel-expand > div.panel-body",
         ],
       },
     },
@@ -130,7 +130,7 @@ export const config = [
         selector: ['div[data-cy="locationDetails"] span[id^="location"]'],
       },
       description: {
-        selector: ['div[data-testid="jobDescription"]'],
+        selector: ["article"],
       },
     },
   },
