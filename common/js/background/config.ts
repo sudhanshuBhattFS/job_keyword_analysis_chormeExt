@@ -83,10 +83,9 @@ export const config = [
   {
     jobPortal: "ZipRecruiter",
     validUrlPatterns: [
-      "/^https:\\/\\/www\\.ziprecruiter\\.com\\/jobs\\/.+$/",
-      "https:\\/\\/www\\.ziprecruiter\\.com\\/jobs-search\\?search(?:=[^&\\s]+)?",
-      ,
-      "^https?:\\/\\/www\\.ziprecruiter\\.com\\/jobs-search\\?search=[^&]+&location=[^&]+(&lk=[^&]+)?(&page=\\d+)?(&lvk=[^&]+)?$",
+      "^https://www\\.ziprecruiter\\.com/jobs/.+$",
+      "^https://www\\.ziprecruiter\\.com/jobs-search\\?search(?:=[^&\\s]+)?",
+      "^https://www\\.ziprecruiter\\.(com|in)/jobs/\\d+-[a-z0-9-]+(?:-at-[a-z0-9-]+)?$",
     ],
     selectors: {
       jobTitle: {
