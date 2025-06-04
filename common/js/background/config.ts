@@ -43,7 +43,7 @@ export const config = [
     {
         jobPortal: "Indeed",
         validUrlPatterns: [
-            "^https:\\/\\/[a-z]+\\.indeed\\.com\\/jobs\\/?\\?.*q=[^&\\s]+",
+            "^https:\\/\\/[a-z]+\\.indeed\\.com\\/.*\\?[^\\s]*vjk=[^&\\s]+",
             "^https?:\\/\\/([a-z]{2}\\.)?indeed\\.com\\/.*[?&]vjk=[a-zA-Z0-9]+.*[?&]advn=\\d+.*",
             "https:\\/\\/[^\\/]+\\.indeed\\.com\\/viewjob\\?jk(?:=[^&\\s]+)?",
         ],
