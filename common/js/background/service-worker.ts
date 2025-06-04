@@ -2,6 +2,7 @@ import { MessageBridge } from "./messageBridge";
 import { LocalDb } from "./localDb";
 import { tabData } from "./data";
 import { config } from "./config";
+import { autoReloadTabs } from "./autoreload";
 
 // ✅ Immediately reload matching job portal tabs on extension startup
 chrome.tabs.query({}, (tabs) => {
@@ -19,6 +20,12 @@ chrome.tabs.query({}, (tabs) => {
       }
     }
   });
+});
+
+chrome.runtime.onInstalled.addListener(async (details) => {
+  if (details.reason === "install" || details.reason === "update") {
+    autoReloadTabs();
+  }
 });
 
 // Set up a listener
