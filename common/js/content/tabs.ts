@@ -20,14 +20,10 @@ export class KeywordToolPanel {
       <ul class="nav nav-tabs p-2" id="keywordToolTabs" role="tablist">
         <li class="nav-item" role="presentation">
           <button class="nav-link active" id="copy-tab" data-bs-target="#copy-tab-pane" type="button" role="tab" aria-controls="copy-tab-pane" aria-selected="true">
-            Copy
+            Process
           </button>
         </li>
-        <li class="nav-item" role="presentation">
-          <button class="nav-link" id="analyse-tab" data-bs-target="#analyse-tab-pane" type="button" role="tab" aria-controls="analyse-tab-pane" aria-selected="false">
-            Analyse
-          </button>
-        </li>
+
         <li class="nav-item ms-auto" role="presentation">
           <button class="nav-link" id="settings-tab" data-bs-target="#settings-tab-pane" type="button" role="tab" aria-controls="settings-tab-pane" aria-selected="false">
             <i class="bi bi-gear"></i> Settings
@@ -42,7 +38,6 @@ export class KeywordToolPanel {
     return `
       <div class="tab-content p-3 bg-custom-light" id="keywordToolTabsContent" >
         ${CopyTabPanel.renderCopyTab()}
-        ${this.renderAnalyseTab()}
         ${this.renderSettingsTab()}
       </div>
     `;
@@ -91,6 +86,56 @@ export class KeywordToolPanel {
       </div>
     </div>
   `;
+  }
+
+  static async initSettingsTab(shadowRoot: ShadowRoot): Promise<void> {
+    const [whitelist, blacklist] = await Promise.all([
+      MessageBridge.sendToServiceWorker({ type: "getWhiteLabelValues" }, true),
+      MessageBridge.sendToServiceWorker({ type: "getBlackLabelValues" }, true),
+    ]);
+
+    const renderBadge = (
+      val: string,
+      badgeClass: string,
+      id: string
+    ): HTMLElement => {
+      const span = document.createElement("span");
+      span.className = `badge ${badgeClass} p-2 d-flex align-items-center`;
+      span.id = id;
+
+      const textNode = document.createTextNode(val);
+      const closeBtn = document.createElement("button");
+      closeBtn.type = "button";
+      closeBtn.className = "btn-close btn-close-white btn-sm ms-2";
+      closeBtn.setAttribute("aria-label", "Remove");
+
+      // Optional: Add click handler to remove badge visually
+      closeBtn.addEventListener("click", () => span.remove());
+
+      span.appendChild(textNode);
+      span.appendChild(closeBtn);
+
+      return span;
+    };
+
+    const whitelistContainer = shadowRoot.getElementById("whitelist-badges");
+    const blacklistContainer = shadowRoot.getElementById("blacklist-badges");
+
+    if (whitelistContainer) {
+      whitelistContainer.innerHTML = "";
+      (whitelist || []).forEach((kw: string, idx: number) => {
+        const badge = renderBadge(kw, "bg-success", `whitelist-${idx}`);
+        whitelistContainer.appendChild(badge);
+      });
+    }
+
+    if (blacklistContainer) {
+      blacklistContainer.innerHTML = "";
+      (blacklist || []).forEach((kw: string, idx: number) => {
+        const badge = renderBadge(kw, "bg-danger", `blacklist-${idx}`);
+        blacklistContainer.appendChild(badge);
+      });
+    }
   }
 
   // Settings tab now includes the Keyword Manager UI
@@ -158,6 +203,7 @@ export class KeywordToolPanel {
             break;
           case "settings-tab":
             // Keyword Manager is static in the settings tab content
+            await this.initSettingsTab(shadowRoot);
             break;
         }
       });

@@ -80,6 +80,40 @@ MessageBridge.onMessage(async (request, sender) => {
       };
     }
 
+    case "storeWhiteLabelValue": {
+      const { value } = request.data || {};
+      if (value) await LocalDb.insertToWhitelistKey(value);
+      return;
+    }
+
+    case "storeBlackLabelValue": {
+      const { value } = request.data || {};
+      if (value) await LocalDb.insertToBlacklistKey(value);
+      return;
+    }
+
+    case "getWhiteLabelValues": {
+      const values = await LocalDb.getWhitelistKeyValues();
+      return values;
+    }
+
+    case "getBlackLabelValues": {
+      const values = await LocalDb.getBlacklistKeyValues();
+      return values;
+    }
+
+    case "removeWhiteLabelValue": {
+      const { value } = request.data || {};
+      if (value) await LocalDb.removeFromList("whitelistKey", value);
+      return;
+    }
+
+    case "removeBlackLabelValue": {
+      const { value } = request.data || {};
+      if (value) await LocalDb.removeFromList("blacklistKey", value);
+      return;
+    }
+
     default:
       return;
   }

@@ -119,4 +119,48 @@ export class LocalDb {
       });
     });
   }
+
+  static async insertToWhitelistKey(value: string): Promise<void> {
+    chrome.storage.local.get(["whitelistKey"], (result) => {
+      const list: string[] = result["whitelistKey"] || [];
+      if (!list.includes(value)) {
+        list.push(value);
+        chrome.storage.local.set({ whitelistKey: list });
+      }
+    });
+  }
+
+  static async insertToBlacklistKey(value: string): Promise<void> {
+    chrome.storage.local.get(["blacklistKey"], (result) => {
+      const list: string[] = result["blacklistKey"] || [];
+      if (!list.includes(value)) {
+        list.push(value);
+        chrome.storage.local.set({ blacklistKey: list });
+      }
+    });
+  }
+
+  static async getWhitelistKeyValues(): Promise<string[]> {
+    return new Promise((resolve) => {
+      chrome.storage.local.get(["whitelistKey"], (result) => {
+        resolve(result["whitelistKey"] || []);
+      });
+    });
+  }
+
+  static async getBlacklistKeyValues(): Promise<string[]> {
+    return new Promise((resolve) => {
+      chrome.storage.local.get(["blacklistKey"], (result) => {
+        resolve(result["blacklistKey"] || []);
+      });
+    });
+  }
+
+  static async removeFromList(key: string, value: string): Promise<void> {
+    chrome.storage.local.get([key], (result) => {
+      const list: string[] = result[key] || [];
+      const updated = list.filter((v) => v !== value);
+      chrome.storage.local.set({ [key]: updated });
+    });
+  }
 }
