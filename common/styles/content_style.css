@@ -5,7 +5,7 @@
   /* Typography */
   --font-family: 'Arial', sans-serif;
   --font-size-base: 14px;
-  --font-size-sm: 0.875rem;
+  --font-size-sm: 12px;
 
   /* Theme Colors (Unique Palette) */
   --color-heading: #1d3557;  /* Deep Navy */
@@ -45,7 +45,7 @@ body,
 
 #job-keyword-analysis-popup {
   max-width: 550px !important;
-  width: 20rem;
+  width: 316px;
   background-color: var(--color-bg) !important;
   border-radius: var(--border-radius);
   box-shadow: 0 2px 10px var(--color-shadow);
@@ -55,7 +55,7 @@ body,
   top: 0;
   right: 0;
   text-align: left;
-  font-size: var(--font-size-sm);
+  font-size: var(--font-size-sm) !important;
 }
 
 #job-keyword-analysis {
