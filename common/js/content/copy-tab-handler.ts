@@ -1,10 +1,7 @@
 import { ConfigStore } from "./config-handling";
 import $ from "jquery";
 import { MessageBridge } from "./messageBridge";
-import {
-  highlightAndCountKeywords,
-  KeywordMatchCount,
-} from "./highlight/highlight";
+import { highlightAndCountKeywords } from "./highlight/highlight";
 export function handleCopyJob($: Function, shadowRoot: ShadowRoot): void {
   const $copyButton = $("#copy-btn-panel");
 

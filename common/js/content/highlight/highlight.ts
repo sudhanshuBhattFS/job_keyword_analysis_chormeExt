@@ -1,18 +1,10 @@
-export interface KeywordMatchCount {
-  whitelistCount: number;
-  blacklistCount: number;
-}
+import { KeywordMatchResult } from "../type";
 
 export function highlightAndCountKeywords(
   selector: string | string[],
   whitelist: string[],
   blacklist: string[]
-): {
-  whitelistCount: number;
-  blacklistCount: number;
-  matchedWhitelist: string[];
-  matchedBlacklist: string[];
-} {
+): KeywordMatchResult {
   const selectors = Array.isArray(selector) ? selector : [selector];
   const elements: HTMLElement[] = [];
 

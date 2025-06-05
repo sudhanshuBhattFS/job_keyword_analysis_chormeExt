@@ -16,3 +16,10 @@ export type JobPortalConfig = {
     location: Selector[];
   };
 };
+
+export interface KeywordMatchResult {
+  whitelistCount: number;
+  blacklistCount: number;
+  matchedWhitelist: string[];
+  matchedBlacklist: string[];
+}
