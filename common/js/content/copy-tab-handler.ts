@@ -161,7 +161,7 @@ export class CopyTabPanel {
                       `<span class="badge bg-danger  p-2 rounded-pill">${w}</span>`
                   )
                   .join("")
-              : "N/A"
+              : "None"
           }
           </div>
         </div>
