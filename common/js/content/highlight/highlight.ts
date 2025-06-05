@@ -7,7 +7,12 @@ export function highlightAndCountKeywords(
   selector: string | string[],
   whitelist: string[],
   blacklist: string[]
-): KeywordMatchCount {
+): {
+  whitelistCount: number;
+  blacklistCount: number;
+  matchedWhitelist: string[];
+  matchedBlacklist: string[];
+} {
   const selectors = Array.isArray(selector) ? selector : [selector];
   const elements: HTMLElement[] = [];
 
@@ -20,7 +25,7 @@ export function highlightAndCountKeywords(
   const whitelistMatched = new Set<string>();
   const blacklistMatched = new Set<string>();
 
-  // 1. Unwrap existing highlights inside elements
+  // Unwrap existing highlights
   elements.forEach((el) => {
     const oldHighlights = el.querySelectorAll(
       'span[data-highlight-id="keyword-highlight"]'
@@ -28,10 +33,7 @@ export function highlightAndCountKeywords(
     oldHighlights.forEach((span) => {
       const parent = span.parentNode;
       if (!parent) return;
-      // Replace the span with its text content (unwrap)
-      while (span.firstChild) {
-        parent.insertBefore(span.firstChild, span);
-      }
+      while (span.firstChild) parent.insertBefore(span.firstChild, span);
       parent.removeChild(span);
     });
   });
@@ -51,16 +53,13 @@ export function highlightAndCountKeywords(
     const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT, null);
     const textNodes: Text[] = [];
 
-    while (walker.nextNode()) {
-      textNodes.push(walker.currentNode as Text);
-    }
+    while (walker.nextNode()) textNodes.push(walker.currentNode as Text);
 
     textNodes.forEach((textNode) => {
       const parent = textNode.parentElement;
       if (!parent) return;
 
       const originalText = textNode.textContent ?? "";
-
       const whiteMatches = originalText.match(whitelistRegex ?? /$^/) || [];
       const blackMatches = originalText.match(blacklistRegex ?? /$^/) || [];
 
@@ -108,5 +107,7 @@ export function highlightAndCountKeywords(
   return {
     whitelistCount: whitelistMatched.size,
     blacklistCount: blacklistMatched.size,
+    matchedWhitelist: [...whitelistMatched],
+    matchedBlacklist: [...blacklistMatched],
   };
 }

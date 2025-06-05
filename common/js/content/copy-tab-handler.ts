@@ -114,7 +114,7 @@ export class CopyTabPanel {
         ),
       ]);
 
-      const result: KeywordMatchCount = highlightAndCountKeywords(
+      const result = highlightAndCountKeywords(
         selector,
         whitelist || [],
         blacklist || []
@@ -126,11 +126,51 @@ export class CopyTabPanel {
 
       if (displayList) {
         displayList.innerHTML = `
-        <div class="alert alert-light border d-flex justify-content-around my-4">
-          <button class="btn btn-primary   bg-success ">Whitelist: ${result.whitelistCount}</button>
-          <button class="btn btn-primary   bg-danger ">Blacklist: ${result.blacklistCount}</button>
+    <div class="alert alert-light border p-3 my-4">
+      <div class="d-flex justify-content-around mb-3">
+        <span class="badge bg-success fs-6 px-3 py-2">Whitelist: ${
+          result.whitelistCount
+        }</span>
+        <span class="badge bg-danger fs-6 px-3 py-2">Blacklist: ${
+          result.blacklistCount
+        }</span>
+      </div>
+      <hr>
+      <div class="d-flex flex-column gap-1">
+        <div d-flex flex-column gap-2>
+          <h6 class='fw-bold'>Matched Whitelist</h6>
+          <div class="d-flex flex-wrap gap-2  badge-container">
+           ${
+             result.matchedWhitelist.length
+               ? result.matchedWhitelist
+                   .map(
+                     (w) =>
+                       `<span class="badge bg-success  p-2 rounded-pill">${w}</span>`
+                   )
+                   .join("")
+               : "None"
+           }
+          </div>
         </div>
-      `;
+        <hr>
+        <div>
+          <h6 class='fw-bold'>Matched Blacklist</h6>
+          <div class="d-flex flex-wrap gap-2  badge-container">
+          ${
+            result.matchedBlacklist.length
+              ? result.matchedBlacklist
+                  .map(
+                    (w) =>
+                      `<span class="badge bg-danger  p-2 rounded-pill">${w}</span>`
+                  )
+                  .join("")
+              : "N/A"
+          }
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
       } else {
         console.warn("#display-list not found inside Shadow DOM.");
       }

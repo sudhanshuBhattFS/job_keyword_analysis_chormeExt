@@ -106,3 +106,10 @@ body,
     max-height: 400px !important;
     overflow: auto;
 }
+
+
+.badge-container{
+  max-height: 150px;
+    overflow: auto;
+}
+
