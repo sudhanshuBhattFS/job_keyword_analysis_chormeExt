@@ -123,10 +123,7 @@ export const config = [
         selector: ['a[data-cy="companyNameLink"]'],
       },
       location: {
-        selector: [
-          'div[data-cy="locationDetails"] span[id^="location"]',
-          '[data-cy="locationDetails"] span',
-        ],
+        selector: ['li[data-cy="location"]'],
       },
       description: {
         selector: ["article"],
