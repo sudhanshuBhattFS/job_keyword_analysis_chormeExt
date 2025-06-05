@@ -54,7 +54,7 @@ MessageBridge.onMessage(async (request, sender) => {
     case "loginUser": {
       const { email, password } = request.data || {};
 
-      if (email === "saurabh@gmail.com" && password === "1234") {
+      if (email === "test@gmail.com" && password === "1234") {
         await LocalDb.setLoggedIn(true);
 
         return {
