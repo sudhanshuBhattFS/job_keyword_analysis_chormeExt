@@ -32,6 +32,8 @@ body,
   font-size: var(--font-size-base) !important;
   color: var(--color-text);
   background-color: var(--color-bg);
+  tab-size : 4 !important ;
+  line-height : 18px !important;
 }
 
 /* =======================
@@ -116,4 +118,5 @@ body,
 .badge{
   font-size: 12px ;
   font-weight: 100;
+  border-radius: 6px !important;
 }
