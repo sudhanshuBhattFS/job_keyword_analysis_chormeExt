@@ -117,7 +117,7 @@ export const config = [
     validUrlPatterns: ["/^https:\\/\\/www\\.dice\\.com\\/job-detail\\/.*$/"],
     selectors: {
       jobTitle: {
-        selector: ['h1[data-cy="jobTitle"]'],
+        selector: ['[data-cy="jobTitle"]'],
       },
       companyName: {
         selector: ['a[data-cy="companyNameLink"]'],
