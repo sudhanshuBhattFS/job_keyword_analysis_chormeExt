@@ -115,3 +115,7 @@ body,
     overflow: auto;
 }
 
+.badge{
+  font-size: 12px ;
+  font-weight: 100;
+}
