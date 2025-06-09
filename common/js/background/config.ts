@@ -10,6 +10,7 @@ export const config = [
           "h1.jobs-unified-top-card__job-title",
           "h2.top-card-layout__title",
           "h2.jobs-unified-top-card__job-title",
+          ".job-details-jobs-unified-top-card__job-title"
         ],
       },
       companyName: {

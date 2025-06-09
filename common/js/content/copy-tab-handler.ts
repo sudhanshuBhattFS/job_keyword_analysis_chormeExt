@@ -77,7 +77,7 @@ export class CopyTabPanel {
     const title = getText(config.selectors.jobTitle.selector);
     const url = window.location.href;
 
-    const row = `${title}\t${companyName}\t${location}\t${url}`;
+    const row = `${companyName}\t${title}\t${location}\t${url}`;
 
     try {
       await navigator.clipboard.writeText(row);
