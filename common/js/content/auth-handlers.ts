@@ -1,4 +1,4 @@
-import { attachPopup } from "./ext_popup";
+import { attachMainPopup, attachPopup } from "./ext_popup";
 import { MessageBridge } from "./messageBridge";
 
 export async function handleLogin($: Function) {
@@ -16,7 +16,8 @@ export async function handleLogin($: Function) {
   );
 
   if (response.status === true) {
-    attachPopup(true);
+    // attachPopup(true);
+    attachMainPopup();
   } else {
     // display response message
     alert(response.message || "Login failed. Please try again.");

@@ -3,6 +3,7 @@ import { LocalDb } from "./localDb";
 import { tabData } from "./data";
 import { config } from "./config";
 import { autoReloadTabs } from "./autoreload";
+import { loginTeamMember, logoutTeamMember } from "./authAPI";
 
 chrome.runtime.onInstalled.addListener(async (details) => {
     if (details.reason === "install" || details.reason === "update") {
@@ -20,36 +21,22 @@ MessageBridge.onMessage(async (request, sender) => {
 
     switch (request?.type) {
         case "isLoggedIn": {
-            const isLoggedIn = await LocalDb.getLoggedIn();
+            if (!tabId) {
+                console.warn("[isLoggedIn] No tabId found for sender.");
+                return;
+            }
+            const authData = await LocalDb.getAuthData();
+            const isLoggedIn = !!authData;
 
             const matchedConfig = config.find((item) =>
-                currentUrl.includes(item.jobPortal.toLowerCase())
+                currentUrl.toLowerCase().includes(item.jobPortal.toLowerCase())
             );
+            let data = {
+                isLoggedIn: isLoggedIn,
+                config: matchedConfig,
+            };
 
-            console.log(
-                "isLoggedIn",
-                isLoggedIn,
-                "matchedConfig",
-                matchedConfig
-            );
-
-            if (tabId) {
-                MessageBridge.sendToContentScript(
-                    tabId,
-                    {
-                        type: "initPopup",
-                        data: {
-                            isLoggedIn: isLoggedIn ?? false,
-                            config: matchedConfig,
-                        },
-                    },
-                    false
-                );
-            } else {
-                console.warn("No tabId found for sender.");
-            }
-
-            return;
+            return data;
         }
 
         case "getTabData": {
@@ -59,19 +46,33 @@ MessageBridge.onMessage(async (request, sender) => {
         case "loginUser": {
             const { email, password } = request.data || {};
 
-            if (email === "test@gmail.com" && password === "1234") {
-                await LocalDb.setLoggedIn(true);
-
+            let data = await loginTeamMember(email, password);
+            if (!data) {
+                return {
+                    status: false,
+                    message: "Invalid email or password.",
+                };
+            } else {
                 return {
                     status: true,
                     message: "Login successful.",
                 };
             }
+        }
 
-            return {
-                status: false,
-                message: "Invalid email or password.",
-            };
+        case "logout" : {
+            let data = await logoutTeamMember();
+             if (!data) {
+                return {
+                    status: false,
+                    message: "Unable to logout.",
+                };
+            } else {
+                return {
+                    status: true,
+                    message: "Logout successful.",
+                };
+            }
         }
 
         case "storeWhiteLabelValue": {

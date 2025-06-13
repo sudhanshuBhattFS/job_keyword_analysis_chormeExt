@@ -1,22 +1,26 @@
 import { MessageBridge } from "./messageBridge";
 import type { tabData } from "./type.ts";
-import { customPopup } from "./ext_popup.ts";
+import { attachLoginPopup, customPopup, removeExistingPopup } from "./ext_popup.ts";
 import { CopyTabPanel } from "./copy-tab-handler.ts";
 
 export class KeywordToolPanel {
-  // Render full panel HTML (initial)
-  static render(shadowRoot: ShadowRoot): string {
-    return `
+    // Render full panel HTML (initial)
+    static render(shadowRoot: ShadowRoot): string {
+        return `
       <div id="keyword-tool-tabs-wrapper" class="card bg-custom-light shadow-sm">
+        <div class="d-flex justify-content-between align-items-center px-3 py-2 border-bottom">
+          <div class="fw-bold">Jobs Analyzer</div>
+          <button id="logoutBtn" class="btn btn-sm btn-outline-danger">Logout</button>
+        </div>
         ${this.renderTabHeaders()}
         ${this.renderTabContents()}
       </div>
     `;
-  }
+    }
 
-  // Tab headers
-  static renderTabHeaders(): string {
-    return `
+    // Tab headers
+    static renderTabHeaders(): string {
+        return `
       <ul class="nav nav-tabs p-2" id="keywordToolTabs" role="tablist">
         <li class="nav-item" role="presentation">
           <button class="nav-link active" id="copy-tab" data-bs-target="#copy-tab-pane" type="button" role="tab" aria-controls="copy-tab-pane" aria-selected="true">
@@ -31,20 +35,20 @@ export class KeywordToolPanel {
         </li>
       </ul>
     `;
-  }
+    }
 
-  // Tab contents wrapper (Keyword Manager only inside Settings tab)
-  static renderTabContents(): string {
-    return `
+    // Tab contents wrapper (Keyword Manager only inside Settings tab)
+    static renderTabContents(): string {
+        return `
       <div class="tab-content p-3 bg-custom-light" id="keywordToolTabsContent" >
         ${CopyTabPanel.renderCopyTab()}
         ${this.renderSettingsTab()}
       </div>
     `;
-  }
+    }
 
-  static renderAnalyseTab(): string {
-    return `
+    static renderAnalyseTab(): string {
+        return `
     <div class="tab-pane fade" id="analyse-tab-pane" role="tabpanel" aria-labelledby="analyse-tab" tabindex="0">
       <div class="d-flex flex-column justify-content-center align-items-center gap-3 min-vh-25 w-100 ">
         <div 
@@ -59,11 +63,11 @@ export class KeywordToolPanel {
       </div>
     </div>
   `;
-  }
+    }
 
-  // Analyse tab placeholder
-  static renderAnalyseKeywords(): string {
-    return `
+    // Analyse tab placeholder
+    static renderAnalyseKeywords(): string {
+        return `
     <div class="tab-pane fade " id="analyse-tab-pane" role="tabpanel" aria-labelledby="analyse-tab" tabindex="0">
       <div id="analysis-whitelist-section">
         <h6 class="heading text-center w-full m-0">Whitelist Keywords</h6>
@@ -86,61 +90,69 @@ export class KeywordToolPanel {
       </div>
     </div>
   `;
-  }
-
-  static async initSettingsTab(shadowRoot: ShadowRoot): Promise<void> {
-    const [whitelist, blacklist] = await Promise.all([
-      MessageBridge.sendToServiceWorker({ type: "getWhiteLabelValues" }, true),
-      MessageBridge.sendToServiceWorker({ type: "getBlackLabelValues" }, true),
-    ]);
-
-    const renderBadge = (
-      val: string,
-      badgeClass: string,
-      id: string
-    ): HTMLElement => {
-      const span = document.createElement("span");
-      span.className = `badge ${badgeClass} p-2 d-flex align-items-center`;
-      span.id = id;
-
-      const textNode = document.createTextNode(val);
-      const closeBtn = document.createElement("button");
-      closeBtn.type = "button";
-      closeBtn.className = "btn-close btn-close-white btn-sm ms-2";
-      closeBtn.setAttribute("aria-label", "Remove");
-
-      // Optional: Add click handler to remove badge visually
-      closeBtn.addEventListener("click", () => span.remove());
-
-      span.appendChild(textNode);
-      span.appendChild(closeBtn);
-
-      return span;
-    };
-
-    const whitelistContainer = shadowRoot.getElementById("whitelist-badges");
-    const blacklistContainer = shadowRoot.getElementById("blacklist-badges");
-
-    if (whitelistContainer) {
-      whitelistContainer.innerHTML = "";
-      (whitelist || []).forEach((kw: string, idx: number) => {
-        const badge = renderBadge(kw, "bg-success", `whitelist-${idx}`);
-        whitelistContainer.appendChild(badge);
-      });
     }
 
-    if (blacklistContainer) {
-      blacklistContainer.innerHTML = "";
-      (blacklist || []).forEach((kw: string, idx: number) => {
-        const badge = renderBadge(kw, "bg-danger", `blacklist-${idx}`);
-        blacklistContainer.appendChild(badge);
-      });
-    }
-  }
+    static async initSettingsTab(shadowRoot: ShadowRoot): Promise<void> {
+        const [whitelist, blacklist] = await Promise.all([
+            MessageBridge.sendToServiceWorker(
+                { type: "getWhiteLabelValues" },
+                true
+            ),
+            MessageBridge.sendToServiceWorker(
+                { type: "getBlackLabelValues" },
+                true
+            ),
+        ]);
 
-  // Settings tab now includes the Keyword Manager UI
-  static renderSettingsTab(): string {
-    return `
+        const renderBadge = (
+            val: string,
+            badgeClass: string,
+            id: string
+        ): HTMLElement => {
+            const span = document.createElement("span");
+            span.className = `badge ${badgeClass} p-2 d-flex align-items-center`;
+            span.id = id;
+
+            const textNode = document.createTextNode(val);
+            const closeBtn = document.createElement("button");
+            closeBtn.type = "button";
+            closeBtn.className = "btn-close btn-close-white btn-sm ms-2";
+            closeBtn.setAttribute("aria-label", "Remove");
+
+            // Optional: Add click handler to remove badge visually
+            closeBtn.addEventListener("click", () => span.remove());
+
+            span.appendChild(textNode);
+            span.appendChild(closeBtn);
+
+            return span;
+        };
+
+        const whitelistContainer =
+            shadowRoot.getElementById("whitelist-badges");
+        const blacklistContainer =
+            shadowRoot.getElementById("blacklist-badges");
+
+        if (whitelistContainer) {
+            whitelistContainer.innerHTML = "";
+            (whitelist || []).forEach((kw: string, idx: number) => {
+                const badge = renderBadge(kw, "bg-success", `whitelist-${idx}`);
+                whitelistContainer.appendChild(badge);
+            });
+        }
+
+        if (blacklistContainer) {
+            blacklistContainer.innerHTML = "";
+            (blacklist || []).forEach((kw: string, idx: number) => {
+                const badge = renderBadge(kw, "bg-danger", `blacklist-${idx}`);
+                blacklistContainer.appendChild(badge);
+            });
+        }
+    }
+
+    // Settings tab now includes the Keyword Manager UI
+    static renderSettingsTab(): string {
+        return `
       <div class="tab-pane fade" id="settings-tab-pane" role="tabpanel" aria-labelledby="settings-tab" tabindex="0">
         <div class="bg-light card bg-white">
           <h6 class="text-center mb-2 heading card-title">Keyword Manager</h6>
@@ -168,47 +180,62 @@ export class KeywordToolPanel {
         </div>
       </div>
     `;
-  }
+    }
 
-  // Initialize tab switching & initial data load
-  static initialize(shadowRoot: ShadowRoot): void {
-    const tabButtons =
-      shadowRoot.querySelectorAll<HTMLButtonElement>(".nav-link");
-    const tabPanes = shadowRoot.querySelectorAll<HTMLElement>(".tab-pane");
+    // Initialize tab switching & initial data load
+    static initialize(shadowRoot: ShadowRoot): void {
+        const tabButtons =
+            shadowRoot.querySelectorAll<HTMLButtonElement>(".nav-link");
+        const tabPanes = shadowRoot.querySelectorAll<HTMLElement>(".tab-pane");
 
-    // Load Copy tab data once on initialization (because it's active by default)
-    // this.loadCopyTabData(shadowRoot);
+        // Load Copy tab data once on initialization (because it's active by default)
+        // this.loadCopyTabData(shadowRoot);
 
-    tabButtons.forEach((button) => {
-      button.addEventListener("click", async () => {
-        const targetId = button.getAttribute("data-bs-target")?.substring(1);
-        if (!targetId) return;
+        tabButtons.forEach((button) => {
+            button.addEventListener("click", async () => {
+                const targetId = button
+                    .getAttribute("data-bs-target")
+                    ?.substring(1);
+                if (!targetId) return;
 
-        // Deactivate all tabs and panes
-        tabButtons.forEach((btn) => btn.classList.remove("active"));
-        tabPanes.forEach((pane) => pane.classList.remove("show", "active"));
+                // Deactivate all tabs and panes
+                tabButtons.forEach((btn) => btn.classList.remove("active"));
+                tabPanes.forEach((pane) =>
+                    pane.classList.remove("show", "active")
+                );
 
-        // Activate clicked tab and corresponding pane
-        button.classList.add("active");
-        const targetPane = shadowRoot.getElementById(targetId);
-        targetPane?.classList.add("show", "active");
+                // Activate clicked tab and corresponding pane
+                button.classList.add("active");
+                const targetPane = shadowRoot.getElementById(targetId);
+                targetPane?.classList.add("show", "active");
 
-        // Handle tab-specific logic
-        switch (button.id) {
-          case "copy-tab":
-            // await this.loadCopyTabData(shadowRoot);
-            break;
-          case "analyse-tab":
-            // Future: Load or update analysis UI here
-            break;
-          case "settings-tab":
-            // Keyword Manager is static in the settings tab content
-            await this.initSettingsTab(shadowRoot);
-            break;
+                // Handle tab-specific logic
+                switch (button.id) {
+                    case "copy-tab":
+                        // await this.loadCopyTabData(shadowRoot);
+                        break;
+                    case "analyse-tab":
+                        // Future: Load or update analysis UI here
+                        break;
+                    case "settings-tab":
+                        // Keyword Manager is static in the settings tab content
+                        await this.initSettingsTab(shadowRoot);
+                        break;
+                }
+            });
+        });
+
+        const logoutBtn = shadowRoot.getElementById("logoutBtn");
+        if (logoutBtn) {
+            logoutBtn.addEventListener("click", async () => {
+               let isLoggedOut = await MessageBridge.sendToServiceWorker({ type: "logout" }, true);
+               if(isLoggedOut){
+                removeExistingPopup();
+                attachLoginPopup();
+               }
+            });
         }
-      });
-    });
-  }
+    }
 
-  // Load data for Copy tab and update UI
+    // Load data for Copy tab and update UI
 }

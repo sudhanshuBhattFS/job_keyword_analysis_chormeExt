@@ -1,26 +1,56 @@
 import { MessageBridge } from "./messageBridge";
 import "../config";
-import { attachPopup } from "./ext_popup";
+import { attachLoginPopup, attachMainPopup, attachPopup } from "./ext_popup";
 import { ConfigStore, matchUrlPattern } from "./config-handling";
-
-// 🔁 Initial bootstrapping
-MessageBridge.sendToServiceWorker({ type: "isLoggedIn" }, true);
 
 // 🔁 Handle incoming messages from service worker
 MessageBridge.onMessage(async (request) => {
-  switch (request?.type) {
-    case "initPopup": {
-      const config = request.data.config;
-      console.log(matchUrlPattern(config), "MATCH_CONFIG");
-      if (matchUrlPattern(config)) {
-        const configStore = ConfigStore.getInstance();
-        configStore.setConfig(config);
-        attachPopup(request.data.isLoggedIn || false);
-      }
-      break;
+    switch (request?.type) {
+        case "SESSION_EXPIRED":
+            {
+                // showLoginScreen(); // Your custom UI renderer
+            }
+            break;
+        case "refreshUI": {
+            if (request.isLoggedIn) {
+                attachMainPopup();
+            } else {
+                attachLoginPopup();
+            }
+        }
+        default:
+            console.warn("Unhandled message:", request);
     }
-
-    default:
-      console.warn("Unhandled message:", request);
-  }
 });
+
+const initialize = async (): Promise<void> => {
+    try {
+        console.log("INIT");
+        // 🔁 Initial bootstrapping
+        const initUI = await MessageBridge.sendToServiceWorker(
+            { type: "isLoggedIn" },
+            true
+        );
+        if (initUI && initUI.isLoggedIn) {
+            //initiate extension Popup UI
+            const config = initUI.config;
+            console.log(matchUrlPattern(config), "MATCH_CONFIG");
+            if (matchUrlPattern(config)) {
+                const configStore = ConfigStore.getInstance();
+                configStore.setConfig(config);
+                attachMainPopup();
+            }
+        } else {
+            //display loggin popup UI
+            attachLoginPopup();
+        }
+    } catch (error) {
+        console.error("Failed to initialize Spoiler Shield:", error);
+    }
+};
+
+if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", initialize);
+} else {
+    initialize();
+}
