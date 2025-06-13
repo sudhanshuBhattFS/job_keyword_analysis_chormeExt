@@ -39,70 +39,12 @@ export class customPopup {
 
     static outerElementBody(): string {
         return `
-      {{{styles}}}
       <div class="top-right-popup" id="job-keyword-analysis-popup">
          <div id="popup-body" class="bg-color-light">
           {{{body}}}
          </div>
       </div>
     `;
-    }
-}
-
-let shadowRootRef: ShadowRoot | null = null;
-
-export async function attachPopup(isLoggedIn: boolean) {
-    const containerId = "job-keyword-analysis";
-    let container = document.getElementById(containerId);
-
-    // First-time load: create and inject shell
-    if (!container) {
-        container = document.createElement("div");
-        container.id = containerId;
-        container.style.position = "fixed";
-        container.style.top = "0";
-        container.style.left = "0";
-        container.style.zIndex = "99999";
-        document.documentElement.appendChild(container);
-
-        const shadow = container.attachShadow({ mode: "open" });
-        shadowRootRef = shadow;
-
-        let popupHtml = customPopup.outerElementBody();
-        popupHtml = popupHtml.replace(
-            "{{{styles}}}",
-            customPopup.globalStyles()
-        );
-        popupHtml = popupHtml.replace(
-            "{{{body}}}",
-            isLoggedIn
-                ? KeywordToolPanel.render(shadowRootRef)
-                : customPopup.loggedOutBody()
-        );
-
-        shadow.innerHTML = popupHtml;
-
-        // ⛳ Drag setup using #job-keyword-analysis-popup inside shadow DOM
-        const dragTarget = shadow.getElementById("job-keyword-analysis-popup");
-        if (dragTarget) dragElement(dragTarget);
-
-        setupGlobalEventDelegation($JQ, shadow);
-    } else if (shadowRootRef) {
-        // Already initialized: just replace inner body
-        const bodyContainer = shadowRootRef.getElementById("popup-body");
-        if (bodyContainer) {
-            bodyContainer.innerHTML = isLoggedIn
-                ? KeywordToolPanel.render(shadowRootRef)
-                : customPopup.loggedOutBody();
-        }
-
-        // ⛳ Drag setup again
-        const dragTarget = shadowRootRef.getElementById(
-            "job-keyword-analysis-popup"
-        );
-        if (dragTarget) dragElement(dragTarget);
-
-        setupGlobalEventDelegation($JQ, shadowRootRef);
     }
 }
 
@@ -129,9 +71,8 @@ async function attachPopupUI(renderFn: (shadow: ShadowRoot) => string) {
     const bodyHtml = renderFn(shadow);
     const popupHtml = customPopup
         .outerElementBody()
-        .replace("{{{styles}}}", customPopup.globalStyles())
         .replace("{{{body}}}", bodyHtml);
-
+    await applyStyles(shadow);
     shadow.innerHTML = popupHtml;
 
     const dragTarget = shadow.getElementById("job-keyword-analysis-popup");
@@ -151,4 +92,20 @@ export async function attachMainPopup() {
 export function removeExistingPopup() {
     const container = document.getElementById("job-keyword-analysis");
     if (container) container.remove();
+}
+
+async function applyStyles(shadow: ShadowRoot) {
+    const bootstrapCss = await fetch(
+        chrome.runtime.getURL("styles/bootstrap.min.css")
+    ).then((res) => res.text());
+    const customCss = await fetch(
+        chrome.runtime.getURL("styles/content_style.css")
+    ).then((res) => res.text());
+
+    const styleSheet1 = new CSSStyleSheet();
+    const styleSheet2 = new CSSStyleSheet();
+    await styleSheet1.replace(bootstrapCss);
+    await styleSheet2.replace(customCss);
+
+    (shadow as any).adoptedStyleSheets = [styleSheet1, styleSheet2];
 }
