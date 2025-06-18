@@ -110,7 +110,7 @@ export class KeywordToolPanel {
         ): HTMLElement => {
             const span = document.createElement("span");
             span.className = `badge ${badgeClass} p-2 d-flex align-items-center`;
-            span.id = id;
+            span.id = `${val}`;
 
             const textNode = document.createTextNode(val);
             const closeBtn = document.createElement("button");

@@ -1,3 +1,4 @@
+import currentEnvironment from "../config";
 import { apiFetch } from "./apiFetch";
 
 export interface CopiedJobData {
@@ -44,3 +45,22 @@ export async function saveAnalyzedJob(data: AnalyzedJobData): Promise<boolean> {
 //   location: "Remote",
 //   url: window.location.href,
 // });
+
+export async function syncKeywordWithBackend(
+    type: "whitelistKeywords" | "blacklistKeywords",
+    value: string | string[],
+    action: "add" | "remove"
+): Promise<void> {
+    try {
+        await fetch(`${currentEnvironment.apiUrl}/api/v1/members/keywords`, {
+            method: "POST",
+            credentials: "include",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ type, value, action }),
+        });
+    } catch (err) {
+        console.warn("Failed to sync with backend:", err);
+    }
+}

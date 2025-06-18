@@ -27,6 +27,13 @@ export async function loginTeamMember(
         const data = await response.json();
         // Optional: Store member data if needed
         await LocalDb.setAuthData(data.member);
+        // store whitelist and blacklist keys
+        if (data.whitelistKeywords) {
+            await LocalDb.insertToWhitelistKey(data.whitelistKeywords);
+        }
+        if (data.blacklistKeywords) {
+            await LocalDb.insertToBlacklistKey(data.blacklistKeywords);
+        }
         return data;
     } catch (err) {
         console.error("Login API error:", err);

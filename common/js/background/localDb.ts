@@ -83,38 +83,40 @@ export class LocalDb {
         });
     }
 
-    static async insertToWhitelistKey(value: string): Promise<void> {
-        chrome.storage.local.get(["whitelistKey"], (result) => {
-            const list: string[] = result["whitelistKey"] || [];
-            if (!list.includes(value)) {
-                list.push(value);
-                chrome.storage.local.set({ whitelistKey: list });
-            }
+    static async insertToWhitelistKey(value: string | string[]): Promise<void> {
+        chrome.storage.local.get(["whitelistKeywords"], (result) => {
+            const existingList: string[] = result["whitelistKeywords"] || [];
+            const incoming = Array.isArray(value) ? value : [value];
+
+            const merged = Array.from(new Set([...existingList, ...incoming]));
+
+            chrome.storage.local.set({ whitelistKeywords: merged });
         });
     }
 
-    static async insertToBlacklistKey(value: string): Promise<void> {
-        chrome.storage.local.get(["blacklistKey"], (result) => {
-            const list: string[] = result["blacklistKey"] || [];
-            if (!list.includes(value)) {
-                list.push(value);
-                chrome.storage.local.set({ blacklistKey: list });
-            }
+    static async insertToBlacklistKey(value: string | string[]): Promise<void> {
+        chrome.storage.local.get(["blacklistKeywords"], (result) => {
+            const existingList: string[] = result["blacklistKeywords"] || [];
+            const incoming = Array.isArray(value) ? value : [value];
+
+            const merged = Array.from(new Set([...existingList, ...incoming])); // avoid duplicates
+
+            chrome.storage.local.set({ blacklistKeywords: merged });
         });
     }
 
     static async getWhitelistKeyValues(): Promise<string[]> {
         return new Promise((resolve) => {
-            chrome.storage.local.get(["whitelistKey"], (result) => {
-                resolve(result["whitelistKey"] || []);
+            chrome.storage.local.get(["whitelistKeywords"], (result) => {
+                resolve(result["whitelistKeywords"] || []);
             });
         });
     }
 
     static async getBlacklistKeyValues(): Promise<string[]> {
         return new Promise((resolve) => {
-            chrome.storage.local.get(["blacklistKey"], (result) => {
-                resolve(result["blacklistKey"] || []);
+            chrome.storage.local.get(["blacklistKeywords"], (result) => {
+                resolve(result["blacklistKeywords"] || []);
             });
         });
     }

@@ -3,8 +3,12 @@ import { LocalDb } from "./localDb";
 import { tabData } from "./data";
 import { config } from "./config";
 import { autoReloadTabs } from "./autoreload";
-import { loginTeamMember, logoutTeamMember } from "./authAPI";
+import {
+    loginTeamMember,
+    logoutTeamMember
+} from "./authAPI";
 import { fetchJobPortalConfig } from "./settingAPI";
+import { syncKeywordWithBackend } from "./teamMemberAPI";
 
 chrome.runtime.onInstalled.addListener(async (details) => {
     if (details.reason === "install" || details.reason === "update") {
@@ -61,9 +65,9 @@ MessageBridge.onMessage(async (request, sender) => {
             }
         }
 
-        case "logout" : {
+        case "logout": {
             let data = await logoutTeamMember();
-             if (!data) {
+            if (!data) {
                 return {
                     status: false,
                     message: "Unable to logout.",
@@ -76,18 +80,6 @@ MessageBridge.onMessage(async (request, sender) => {
             }
         }
 
-        case "storeWhiteLabelValue": {
-            const { value } = request.data || {};
-            if (value) await LocalDb.insertToWhitelistKey(value);
-            return;
-        }
-
-        case "storeBlackLabelValue": {
-            const { value } = request.data || {};
-            if (value) await LocalDb.insertToBlacklistKey(value);
-            return;
-        }
-
         case "getWhiteLabelValues": {
             const values = await LocalDb.getWhitelistKeyValues();
             return values;
@@ -98,15 +90,47 @@ MessageBridge.onMessage(async (request, sender) => {
             return values;
         }
 
+        case "storeWhiteLabelValue": {
+            const { value } = request.data || {};
+            if (value) {
+                await LocalDb.insertToWhitelistKey(value);
+                await syncKeywordWithBackend("whitelistKeywords", value, "add");
+            }
+            return;
+        }
+
+        case "storeBlackLabelValue": {
+            const { value } = request.data || {};
+            if (value) {
+                await LocalDb.insertToBlacklistKey(value);
+                await syncKeywordWithBackend("blacklistKeywords", value, "add");
+            }
+            return;
+        }
+
         case "removeWhiteLabelValue": {
             const { value } = request.data || {};
-            if (value) await LocalDb.removeFromList("whitelistKey", value);
+            if (value) {
+                await LocalDb.removeFromList("whitelistKeywords", value);
+                await syncKeywordWithBackend(
+                    "whitelistKeywords",
+                    value,
+                    "remove"
+                );
+            }
             return;
         }
 
         case "removeBlackLabelValue": {
             const { value } = request.data || {};
-            if (value) await LocalDb.removeFromList("blacklistKey", value);
+            if (value) {
+                await LocalDb.removeFromList("blacklistKeywords", value);
+                await syncKeywordWithBackend(
+                    "blacklistKeywords",
+                    value,
+                    "remove"
+                );
+            }
             return;
         }
 
