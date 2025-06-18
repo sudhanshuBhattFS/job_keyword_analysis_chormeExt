@@ -1,6 +1,6 @@
 import { MessageBridge } from "./messageBridge";
 import "../config";
-import { attachLoginPopup, attachMainPopup, attachPopup } from "./ext_popup";
+import { attachLoginPopup, attachMainPopup } from "./ext_popup";
 import { ConfigStore, matchUrlPattern } from "./config-handling";
 
 // 🔁 Handle incoming messages from service worker
@@ -25,6 +25,14 @@ MessageBridge.onMessage(async (request) => {
 
 const initialize = async (): Promise<void> => {
     try {
+        const configStore = ConfigStore.getInstance();
+        const configList = await configStore.loadConfig();
+
+        if (!configList) {
+            console.warn("No configuration available.");
+            return;
+        }
+
         console.log("INIT");
         // 🔁 Initial bootstrapping
         const initUI = await MessageBridge.sendToServiceWorker(

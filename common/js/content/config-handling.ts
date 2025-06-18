@@ -1,53 +1,72 @@
+import { fetchJobPortalConfig } from "../background/settingAPI";
 import { JobPortalConfig } from "./type";
 
+const CONFIG_STORAGE_KEY = "job_portal_config";
+const CONFIG_TTL_MS = 1000 * 60 * 60 * 6; // 6 hours
+
 export function matchUrlPattern(config: JobPortalConfig): boolean {
-  const currentUrl = window.location.href.toLowerCase();
-  const portalName = config.jobPortal.toLowerCase();
+    const currentUrl = window.location.href.toLowerCase();
+    const portalName = config.jobPortal.toLowerCase();
 
-  if (!currentUrl.includes(portalName)) {
-    return false;
-  }
+    if (!currentUrl.includes(portalName)) return false;
 
-  for (const patternStr of config.validUrlPatterns) {
-    try {
-      const cleaned = patternStr.replace(/^\/|\/$/g, "");
-      const regex = new RegExp(cleaned, "i");
-
-      if (regex.test(currentUrl)) {
-        return true;
-      }
-    } catch (e) {
-      console.warn(`Invalid RegExp in config: ${patternStr}`, e);
-    }
-  }
-
-  return false;
+    return config.validUrlPatterns.some((patternStr) => {
+        try {
+            const regex = new RegExp(patternStr.replace(/^\/|\/$/g, ""), "i");
+            return regex.test(currentUrl);
+        } catch (e) {
+            console.warn(`Invalid RegExp in config: ${patternStr}`, e);
+            return false;
+        }
+    });
 }
 
 export class ConfigStore {
-  private static _instance: ConfigStore;
-  private _config: any | null = null;
+    private static _instance: ConfigStore;
+    private _config: JobPortalConfig[] | null = null;
 
-  private constructor() {}
+    private constructor() {}
 
-  static getInstance(): ConfigStore {
-    if (!ConfigStore._instance) {
-      ConfigStore._instance = new ConfigStore();
+    static getInstance(): ConfigStore {
+        if (!ConfigStore._instance) {
+            ConfigStore._instance = new ConfigStore();
+        }
+        return ConfigStore._instance;
     }
-    return ConfigStore._instance;
-  }
 
-  setConfig(config: any): boolean {
-    this._config = config;
-    console.log("Config stored successfully:", config);
-    return true;
-  }
+    private isStale(timestamp: number): boolean {
+        return Date.now() - timestamp > CONFIG_TTL_MS;
+    }
 
-  getConfig(): any | null {
-    return this._config;
-  }
+    private saveToLocal(config: JobPortalConfig[]): void {
+        const data = { config, timestamp: Date.now() };
+        chrome.storage.local.set({ [CONFIG_STORAGE_KEY]: data });
+        this._config = config;
+    }
 
-  hasConfig(): boolean {
-    return this._config !== null;
-  }
+    async loadConfig(): Promise<JobPortalConfig[] | null> {
+        if (this._config) return this._config;
+
+        const stored = await new Promise<any>((resolve) =>
+            chrome.storage.local.get(CONFIG_STORAGE_KEY, resolve)
+        );
+
+        const data = stored[CONFIG_STORAGE_KEY];
+
+        if (data && data.config && !this.isStale(data.timestamp)) {
+            this._config = data.config;
+            return data.config;
+        }
+
+        // Fallback to backend
+
+        try {
+            const freshConfig = await fetchJobPortalConfig();
+            this.saveToLocal(freshConfig);
+            return freshConfig;
+        } catch (err) {
+            console.error("Failed to fetch config from backend", err);
+            return data?.config ?? null;
+        }
+    }
 }
