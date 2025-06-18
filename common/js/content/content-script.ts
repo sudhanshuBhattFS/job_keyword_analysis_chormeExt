@@ -7,17 +7,17 @@ import { ConfigStore, matchUrlPattern } from "./config-handling";
 MessageBridge.onMessage(async (request) => {
     switch (request?.type) {
         case "SESSION_EXPIRED":
-            {
-                // showLoginScreen(); // Your custom UI renderer
-            }
+            // TODO: handle session expiration UI
             break;
-        case "refreshUI": {
+
+        case "refreshUI":
             if (request.isLoggedIn) {
                 attachMainPopup();
             } else {
                 attachLoginPopup();
             }
-        }
+            break;
+
         default:
             console.warn("Unhandled message:", request);
     }
@@ -28,32 +28,39 @@ const initialize = async (): Promise<void> => {
         const configStore = ConfigStore.getInstance();
         const configList = await configStore.loadConfig();
 
-        if (!configList) {
+        if (!Array.isArray(configList) || configList.length === 0) {
             console.warn("No configuration available.");
             return;
         }
 
         console.log("INIT");
-        // 🔁 Initial bootstrapping
+
+        // 🔁 Check login status
         const initUI = await MessageBridge.sendToServiceWorker(
             { type: "isLoggedIn" },
             true
         );
-        if (initUI && initUI.isLoggedIn) {
-            //initiate extension Popup UI
-            const config = initUI.config;
-            console.log(matchUrlPattern(config), "MATCH_CONFIG");
-            if (matchUrlPattern(config)) {
-                const configStore = ConfigStore.getInstance();
-                configStore.setConfig(config);
+
+        if (initUI?.isLoggedIn) {
+            // Try to find matching config
+            const matchedConfig = configList.find((config) =>
+                matchUrlPattern(config)
+            );
+
+            if (matchedConfig) {
+                console.log(
+                    "Matched config for current site:",
+                    matchedConfig.jobPortal
+                );
                 attachMainPopup();
+            } else {
+                console.log("No matching job portal config found.");
             }
         } else {
-            //display loggin popup UI
             attachLoginPopup();
         }
     } catch (error) {
-        console.error("Failed to initialize Spoiler Shield:", error);
+        console.error("Failed to initialize extension:", error);
     }
 };
 

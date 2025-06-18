@@ -4,6 +4,7 @@ import { tabData } from "./data";
 import { config } from "./config";
 import { autoReloadTabs } from "./autoreload";
 import { loginTeamMember, logoutTeamMember } from "./authAPI";
+import { fetchJobPortalConfig } from "./settingAPI";
 
 chrome.runtime.onInstalled.addListener(async (details) => {
     if (details.reason === "install" || details.reason === "update") {
@@ -126,6 +127,11 @@ MessageBridge.onMessage(async (request, sender) => {
                 .catch((err) =>
                     console.log("Error pushing to Google Sheet", err.message)
                 );
+        }
+
+        case "atsConfigFetch": {
+            const config = await fetchJobPortalConfig();
+            return config;
         }
         default:
             return;

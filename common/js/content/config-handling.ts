@@ -1,4 +1,5 @@
 import { fetchJobPortalConfig } from "../background/settingAPI";
+import { MessageBridge } from "./messageBridge";
 import { JobPortalConfig } from "./type";
 
 const CONFIG_STORAGE_KEY = "job_portal_config";
@@ -59,9 +60,9 @@ export class ConfigStore {
         }
 
         // Fallback to backend
-
+        let freshConfig = await MessageBridge.sendToServiceWorker({type:"atsConfigFetch"}, true);
         try {
-            const freshConfig = await fetchJobPortalConfig();
+            // const freshConfig = await fetchJobPortalConfig();
             this.saveToLocal(freshConfig);
             return freshConfig;
         } catch (err) {

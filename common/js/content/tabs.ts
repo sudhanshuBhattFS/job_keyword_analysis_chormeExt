@@ -1,7 +1,6 @@
 import { MessageBridge } from "./messageBridge";
-import type { tabData } from "./type.ts";
-import { attachLoginPopup, customPopup, removeExistingPopup } from "./ext_popup.ts";
-import { CopyTabPanel } from "./copy-tab-handler.ts";
+import { attachLoginPopup, removeExistingPopup } from "./ext_popup";
+import { CopyTabPanel } from "./copy-tab-handler";
 
 export class KeywordToolPanel {
     // Render full panel HTML (initial)
