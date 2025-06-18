@@ -27,7 +27,6 @@ const initialize = async (): Promise<void> => {
     try {
         const configStore = ConfigStore.getInstance();
         const configList = await configStore.loadConfig();
-
         if (!Array.isArray(configList) || configList.length === 0) {
             console.warn("No configuration available.");
             return;

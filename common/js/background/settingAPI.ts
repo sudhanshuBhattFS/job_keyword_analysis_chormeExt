@@ -12,11 +12,13 @@ export async function fetchJobPortalConfig(): Promise<any | null> {
             },
         });
 
-        // if (!response.ok) {
-        //     throw new Error(`Failed to fetch config: ${response.status}`);
-        // }
-        const result: JobPortalConfig[] = await response.json();
-        return result;
+        const result = await response.json();
+
+        if (!Array.isArray(result.data)) {
+            throw new Error("Invalid config format");
+        }
+
+        return result.data;
     } catch (error) {
         console.log("Error fetching job portal config:", error.message);
         return null;

@@ -60,14 +60,13 @@ export class ConfigStore {
         }
 
         // Fallback to backend
-        let freshConfig = await MessageBridge.sendToServiceWorker({type:"atsConfigFetch"}, true);
-        try {
-            // const freshConfig = await fetchJobPortalConfig();
+        let freshConfig = await MessageBridge.sendToServiceWorker(
+            { type: "atsConfigFetch" },
+            true
+        );
+        if (freshConfig) {
             this.saveToLocal(freshConfig);
-            return freshConfig;
-        } catch (err) {
-            console.error("Failed to fetch config from backend", err);
-            return data?.config ?? null;
         }
+        return freshConfig;
     }
 }
