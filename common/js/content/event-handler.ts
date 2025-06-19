@@ -10,6 +10,8 @@ import { KeywordToolPanel } from "./tabs";
 // Define type for jQuery function that accepts a selector and returns wrapped elements
 type JQueryLike = (selector: string) => JQuery<HTMLElement>;
 
+let existingClickHandler: EventListener | null = null;
+
 export function setupGlobalEventDelegation(
     $JQ: JQueryStatic,
     shadowRoot: ShadowRoot
@@ -19,15 +21,17 @@ export function setupGlobalEventDelegation(
 
     KeywordToolPanel.initialize(shadowRoot);
 
-    shadowRoot.addEventListener("click", (e: Event) => {
-        const target = e.target as HTMLElement;
+    // Clean up old handler if exists
+    if (existingClickHandler) {
+        shadowRoot.removeEventListener("click", existingClickHandler);
+    }
 
+    // Define and assign the new handler
+    existingClickHandler = (e: Event) => {
+        const target = e.target as HTMLElement;
         if (!target) return;
 
-        const actions: {
-            match: () => boolean;
-            handler: () => void;
-        }[] = [
+        const actions = [
             {
                 match: () => !!target.closest("#add-whitelist"),
                 handler: () => handleAddWhitelist($),
@@ -63,5 +67,7 @@ export function setupGlobalEventDelegation(
                 break;
             }
         }
-    });
+    };
+
+    shadowRoot.addEventListener("click", existingClickHandler);
 }
