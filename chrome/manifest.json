@@ -1,6 +1,6 @@
 {
-    "name": "Job Keyword Analyzer",
-    "description": "Analyze job listings to extract and highlight key skills and keywords for better resume targeting.",
+    "name": "Job Analyzer",
+    "description": "Analyze job listings to extract and highlight key skills and keywords.",
     "version": "1.0.0",
     "manifest_version": 3,
     "permissions": ["cookies", "activeTab", "storage", "tabs"],
