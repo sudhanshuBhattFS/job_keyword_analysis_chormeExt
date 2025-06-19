@@ -2,6 +2,7 @@ import { ConfigStore, matchUrlPattern } from "./config-handling";
 import $ from "jquery";
 import { MessageBridge } from "./messageBridge";
 import { highlightAndCountKeywords } from "./highlight/highlight";
+import { KeywordMatchResult } from "./type";
 
 export function handleCopyJob(): void {
     CopyTabPanel.copyJobDataToClipboard();
@@ -31,6 +32,55 @@ export class CopyTabPanel {
         <div id='display-list'></div>
       </div>
     `;
+    }
+
+    static displayAnalyzedJobData(result: KeywordMatchResult): string {
+        return `
+                <div class="alert alert-light border p-3 my-4">
+                  <div class="d-flex justify-content-around mb-3">
+                    <span class="badge bg-success fs-6 px-3 py-2">Whitelist: ${
+                        result.whitelistCount
+                    }</span>
+                    <span class="badge bg-danger fs-6 px-3 py-2">Blacklist: ${
+                        result.blacklistCount
+                    }</span>
+                  </div>
+                  <hr>
+                  <div class="d-flex flex-column gap-1">
+                    <div>
+                      <h6 class='fw-bold'>Matched Whitelist</h6>
+                      <div class="d-flex flex-wrap gap-2 badge-container">
+                        ${
+                            result.matchedWhitelist.length
+                                ? result.matchedWhitelist
+                                      .map(
+                                          (w) =>
+                                              `<span class="badge bg-success p-2 rounded-pill">${w}</span>`
+                                      )
+                                      .join("")
+                                : "None"
+                        }
+                      </div>
+                    </div>
+                    <hr>
+                    <div>
+                      <h6 class='fw-bold'>Matched Blacklist</h6>
+                      <div class="d-flex flex-wrap gap-2 badge-container">
+                        ${
+                            result.matchedBlacklist.length
+                                ? result.matchedBlacklist
+                                      .map(
+                                          (w) =>
+                                              `<span class="badge bg-danger p-2 rounded-pill">${w}</span>`
+                                      )
+                                      .join("")
+                                : "None"
+                        }
+                      </div>
+                    </div>
+                  </div>
+                </div>
+            `;
     }
 
     static async copyJobDataToClipboard(): Promise<void> {
@@ -69,6 +119,17 @@ export class CopyTabPanel {
         const url = window.location.href;
 
         const row = `${companyName}\t${title}\t${location}\t${url}`;
+
+        //send message to background to save analyzed job
+        let copyJobData = await MessageBridge.sendToServiceWorker(
+            {
+                type: "atsJobCopied",
+                data: {
+                    jobData: { company: companyName, location, title, url },
+                },
+            },
+            true
+        );
 
         try {
             await navigator.clipboard.writeText(row);
@@ -123,52 +184,14 @@ export class CopyTabPanel {
                 return;
             }
 
-            displayList.innerHTML = `
-                <div class="alert alert-light border p-3 my-4">
-                  <div class="d-flex justify-content-around mb-3">
-                    <span class="badge bg-success fs-6 px-3 py-2">Whitelist: ${
-                        result.whitelistCount
-                    }</span>
-                    <span class="badge bg-danger fs-6 px-3 py-2">Blacklist: ${
-                        result.blacklistCount
-                    }</span>
-                  </div>
-                  <hr>
-                  <div class="d-flex flex-column gap-1">
-                    <div>
-                      <h6 class='fw-bold'>Matched Whitelist</h6>
-                      <div class="d-flex flex-wrap gap-2 badge-container">
-                        ${
-                            result.matchedWhitelist.length
-                                ? result.matchedWhitelist
-                                      .map(
-                                          (w) =>
-                                              `<span class="badge bg-success p-2 rounded-pill">${w}</span>`
-                                      )
-                                      .join("")
-                                : "None"
-                        }
-                      </div>
-                    </div>
-                    <hr>
-                    <div>
-                      <h6 class='fw-bold'>Matched Blacklist</h6>
-                      <div class="d-flex flex-wrap gap-2 badge-container">
-                        ${
-                            result.matchedBlacklist.length
-                                ? result.matchedBlacklist
-                                      .map(
-                                          (w) =>
-                                              `<span class="badge bg-danger p-2 rounded-pill">${w}</span>`
-                                      )
-                                      .join("")
-                                : "None"
-                        }
-                      </div>
-                    </div>
-                  </div>
-                </div>
-            `;
+            const url = window.location.href;
+            //send message to background to save analyzed job
+            let analyseSaveStatus = await MessageBridge.sendToServiceWorker(
+                { type: "atsJobAnalyzed", data: { jobData: {...result, url} } },
+                true
+            );
+
+            displayList.innerHTML = CopyTabPanel.displayAnalyzedJobData(result);
         } catch (err) {
             console.error("Keyword highlight failed:", err);
         }
