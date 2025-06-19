@@ -34,12 +34,21 @@ export class KeywordToolPanel {
 
     // ---------------- Render Methods ----------------
 
-    static render(shadowRoot: ShadowRoot): string {
+    static render(): string {
         return `
     <div id="keyword-tool-tabs-wrapper" class="card shadow rounded-4 border-0 bg-light">
         <div class="d-flex justify-content-between align-items-center px-4 py-3 border-bottom">
             <h5 class="mb-0 fw-semibold text-primary">Jobs Analyzer</h5>
-            <button id="logoutBtn" class="btn btn-sm btn-outline-danger rounded-pill">Logout</button>
+            <button
+    id="logoutBtn"
+    class="btn btn-sm btn-outline-danger rounded-circle d-flex align-items-center justify-content-center"
+    style="width: 36px; height: 36px; font-size: 16px;"
+    title="Logout"
+    aria-label="Logout"
+>
+  ↩
+</button>
+
         </div>
         ${this.renderTabHeaders()}
         ${this.renderTabContents()}
@@ -64,7 +73,7 @@ export class KeywordToolPanel {
 
     static renderTabContents(): string {
         return `
-    <div class="tab-content px-4 py-3 bg-white rounded-bottom" id="keywordToolTabsContent">
+    <div class="tab-content px-2 py-3 bg-white rounded-bottom" id="keywordToolTabsContent">
         ${CopyTabPanel.renderCopyTab()}
         ${this.renderSettingsTab()}
     </div>`;
@@ -73,28 +82,59 @@ export class KeywordToolPanel {
     static renderSettingsTab(): string {
         return `
     <div class="tab-pane fade" id="settings-tab-pane" role="tabpanel" aria-labelledby="settings-tab" tabindex="0">
-        <div class="card bg-light border-0 rounded-4 shadow-sm px-4 py-3">
+        <div class="card bg-light border-0 rounded-4 shadow-sm px-3 py-3">
             <div class="card-body px-0">
+                <!-- Whitelist Section -->
                 <div class="mb-4">
-                    <label class="form-label fw-medium">Whitelist Keywords</label>
+                    <label class="form-label fw-bold mb-2" style="font-size: 1.1rem;">Whitelist Keywords</label>
                     <div class="input-group mb-2">
-                        <input type="text" id="whitelist-input" class="form-control rounded-pill px-3" placeholder="eg: remote" />
-                        <button id="add-whitelist" class="btn btn-success rounded-pill px-4">Add</button>
+                        <input
+                            type="text"
+                            id="whitelist-input"
+                            class="form-control rounded-start-pill"
+                            placeholder="eg: remote"
+                            style="font-size: 0.85rem; font-style: italic; padding: 0.5rem 1rem;"
+                        />
+                        <button
+                            id="add-whitelist"
+                            class="btn btn-outline-primary rounded-end-pill"
+                            style="font-size: 0.85rem;"
+                        >
+                            Add
+                        </button>
                     </div>
-                    <div id="whitelist-badges" class="d-flex flex-wrap gap-2"></div>
+                    <div
+                        id="whitelist-badges"
+                        class="badge-scroll-container d-flex flex-wrap gap-2"
+                        ></div>
                 </div>
 
-                <div class="mb-2">
-                    <hr />
-                </div>
+                <!-- Divider -->
+                <hr class="my-4" />
 
+                <!-- Blacklist Section -->
                 <div>
-                    <label class="form-label fw-medium">Blacklist Keywords</label>
+                    <label class="form-label fw-bold mb-2" style="font-size: 1.1rem;">Blacklist Keywords</label>
                     <div class="input-group mb-2">
-                        <input type="text" id="blacklist-input" class="form-control rounded-pill px-3" placeholder="eg: part-time" />
-                        <button id="add-blacklist" class="btn btn-danger rounded-pill px-4">Add</button>
+                        <input
+                            type="text"
+                            id="blacklist-input"
+                            class="form-control rounded-start-pill"
+                            placeholder="eg: part-time"
+                            style="font-size: 0.85rem; font-style: italic; padding: 0.5rem 1rem;"
+                        />
+                        <button
+                            id="add-blacklist"
+                            class="btn btn-outline-primary rounded-end-pill"
+                            style="font-size: 0.85rem;"
+                        >
+                            Add
+                        </button>
                     </div>
-                    <div id="blacklist-badges" class="d-flex flex-wrap gap-2"></div>
+                    <div
+                        id="blacklist-badges"
+                        class="badge-scroll-container d-flex flex-wrap gap-2"
+                        ></div>
                 </div>
             </div>
         </div>

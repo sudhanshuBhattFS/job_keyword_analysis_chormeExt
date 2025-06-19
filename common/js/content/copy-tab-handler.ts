@@ -86,7 +86,7 @@ export class CopyTabPanel {
                 </button>
             </div>
         </div>
-        <div id="display-list" class="mt-4"></div>
+        <div id="display-list" class="mt-2"></div>
     </div>`;
     }
 
@@ -107,7 +107,7 @@ export class CopyTabPanel {
                 : `<span class="text-muted">None</span>`;
 
         return `
-    <div class="card border-0 shadow-sm rounded-4 p-4 mt-4 bg-light">
+    <div class="card border-0 shadow-sm rounded-4 pt-2 mt-2 px-4 bg-light">
         <div class="mb-3">
             <h6 class="fw-bold text-success mb-2">Matched Whitelist ${
                 result.whitelistCount
@@ -190,7 +190,7 @@ export class CopyTabPanel {
 
         try {
             await navigator.clipboard.writeText(row);
-            displayList.innerHTML = `<div class="alert alert-success">Copied successfully.</div>`;
+            displayList.innerHTML = `<div class="alert alert-success mb-0">Copied successfully.</div>`;
         } catch (err) {
             // Fallback using Clipboard API permissions
             try {
@@ -202,7 +202,7 @@ export class CopyTabPanel {
                     permissionStatus.state === "prompt"
                 ) {
                     await navigator.clipboard.writeText(row);
-                    displayList.innerHTML = `<div class="alert alert-success">Copied using fallback clipboard permission.</div>`;
+                    displayList.innerHTML = `<div class="alert alert-success mb-0">Copied successfully.</div>`;
                 } else {
                     throw new Error("Clipboard permission denied");
                 }

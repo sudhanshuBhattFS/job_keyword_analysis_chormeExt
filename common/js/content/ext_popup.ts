@@ -105,7 +105,7 @@ export async function attachLoginPopup() {
 }
 
 export async function attachMainPopup() {
-    await attachPopupUI((shadow) => KeywordToolPanel.render(shadow));
+    await attachPopupUI((shadow) => KeywordToolPanel.render());
 }
 
 export function removeExistingPopup() {
