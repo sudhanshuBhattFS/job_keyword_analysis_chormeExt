@@ -1,14 +1,14 @@
 import { MessageBridge } from "./messageBridge";
 import { LocalDb } from "./localDb";
-import { tabData } from "./data";
 import { config } from "./config";
 import { autoReloadTabs } from "./autoreload";
-import {
-    loginTeamMember,
-    logoutTeamMember
-} from "./authAPI";
+import { loginTeamMember, logoutTeamMember } from "./authAPI";
 import { fetchJobPortalConfig } from "./settingAPI";
-import { syncKeywordWithBackend } from "./teamMemberAPI";
+import {
+    saveAnalyzedJob,
+    saveCopiedJob,
+    syncKeywordWithBackend,
+} from "./teamMemberAPI";
 
 chrome.runtime.onInstalled.addListener(async (details) => {
     if (details.reason === "install" || details.reason === "update") {
@@ -42,10 +42,6 @@ MessageBridge.onMessage(async (request, sender) => {
             };
 
             return data;
-        }
-
-        case "getTabData": {
-            return tabData;
         }
 
         case "loginUser": {
@@ -156,6 +152,25 @@ MessageBridge.onMessage(async (request, sender) => {
         case "atsConfigFetch": {
             const config = await fetchJobPortalConfig();
             return config;
+        }
+
+        case "atsJobCopied": {
+            const { jobData } = request.data || {};
+            if (jobData) {
+                // Assuming saveCopiedJob is defined in teamMemberAPI
+                const result = await saveCopiedJob(jobData);
+                return { success: result };
+            }
+            return { success: false, message: "No job data provided." };
+        }
+        case "atsJobAnalyzed": {
+            const { jobData } = request.data || {};
+            if (jobData) {
+                // Assuming saveAnalyzedJob is defined in teamMemberAPI
+                const result = await saveAnalyzedJob(jobData);
+                return { success: result };
+            }
+            return { success: false, message: "No job data provided." };
         }
         default:
             return;

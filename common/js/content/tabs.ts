@@ -2,193 +2,240 @@ import { MessageBridge } from "./messageBridge";
 import { attachLoginPopup, removeExistingPopup } from "./ext_popup";
 import { CopyTabPanel } from "./copy-tab-handler";
 
+// Utility function for safe base64 encoding
+function safeBtoa(str: string): string {
+    try {
+        const binary = encodeURIComponent(str).replace(
+            /%([0-9A-F]{2})/g,
+            (_, p1) => String.fromCharCode(parseInt(p1, 16))
+        );
+        return btoa(binary).replace(/=/g, "");
+    } catch {
+        return crypto.randomUUID(); // fallback
+    }
+}
+
+// Constants to avoid typos
+const BADGE_IDS = {
+    whitelist: "whitelist-badges",
+    blacklist: "blacklist-badges",
+};
+
+const BADGE_CLASSES = {
+    whitelist: "bg-success",
+    blacklist: "bg-danger",
+};
+
 export class KeywordToolPanel {
-    // Render full panel HTML (initial)
-    static render(shadowRoot: ShadowRoot): string {
+    static initialize(shadowRoot: ShadowRoot): void {
+        this.setupTabNavigation(shadowRoot);
+        this.setupLogoutHandler(shadowRoot);
+    }
+
+    // ---------------- Render Methods ----------------
+
+    static render(): string {
         return `
-      <div id="keyword-tool-tabs-wrapper" class="card bg-custom-light shadow-sm">
-        <div class="d-flex justify-content-between align-items-center px-3 py-2 border-bottom">
-          <div class="fw-bold">Jobs Analyzer</div>
-          <button id="logoutBtn" class="btn btn-sm btn-outline-danger">Logout</button>
+    <div id="keyword-tool-tabs-wrapper" class="card shadow rounded-4 border-0 bg-light">
+        <div class="d-flex justify-content-between align-items-center px-4 py-3 border-bottom">
+            <h5 class="mb-0 fw-semibold text-primary">Jobs Analyzer</h5>
+            <button
+    id="logoutBtn"
+    class="btn btn-sm btn-outline-danger rounded-circle d-flex align-items-center justify-content-center"
+    style="width: 36px; height: 36px; font-size: 16px;"
+    title="Logout"
+    aria-label="Logout"
+>
+  ↩
+</button>
+
         </div>
         ${this.renderTabHeaders()}
         ${this.renderTabContents()}
-      </div>
-    `;
+    </div>`;
     }
 
-    // Tab headers
     static renderTabHeaders(): string {
         return `
-      <ul class="nav nav-tabs p-2" id="keywordToolTabs" role="tablist">
+    <ul class="nav nav-tabs px-3 pt-3" id="keywordToolTabs" role="tablist">
         <li class="nav-item" role="presentation">
-          <button class="nav-link active" id="copy-tab" data-bs-target="#copy-tab-pane" type="button" role="tab" aria-controls="copy-tab-pane" aria-selected="true">
-            Process
-          </button>
+            <button class="nav-link active rounded-top" id="copy-tab" data-bs-target="#copy-tab-pane" type="button" role="tab" aria-controls="copy-tab-pane" aria-selected="true">
+                Process
+            </button>
         </li>
-
         <li class="nav-item ms-auto" role="presentation">
-          <button class="nav-link" id="settings-tab" data-bs-target="#settings-tab-pane" type="button" role="tab" aria-controls="settings-tab-pane" aria-selected="false">
-            <i class="bi bi-gear"></i> Settings
-          </button>
+            <button class="nav-link rounded-top" id="settings-tab" data-bs-target="#settings-tab-pane" type="button" role="tab" aria-controls="settings-tab-pane" aria-selected="false">
+                Settings
+            </button>
         </li>
-      </ul>
-    `;
+    </ul>`;
     }
 
-    // Tab contents wrapper (Keyword Manager only inside Settings tab)
     static renderTabContents(): string {
         return `
-      <div class="tab-content p-3 bg-custom-light" id="keywordToolTabsContent" >
+    <div class="tab-content px-2 py-3 bg-white rounded-bottom" id="keywordToolTabsContent">
         ${CopyTabPanel.renderCopyTab()}
         ${this.renderSettingsTab()}
-      </div>
-    `;
+    </div>`;
     }
 
-    static renderAnalyseTab(): string {
-        return `
-    <div class="tab-pane fade" id="analyse-tab-pane" role="tabpanel" aria-labelledby="analyse-tab" tabindex="0">
-      <div class="d-flex flex-column justify-content-center align-items-center gap-3 min-vh-25 w-100 ">
-        <div 
-          id="analyse-status-message" 
-          class="w-100 p-3 heading  border rounded"
-        >
-          Click the button to analyse keywords from the job description.
-        </div>
-        <button id="analyse-job-description-btn" class="btn btn-secondary heading w-100">
-          Analyse
-        </button>
-      </div>
-    </div>
-  `;
-    }
-
-    // Analyse tab placeholder
-    static renderAnalyseKeywords(): string {
-        return `
-    <div class="tab-pane fade " id="analyse-tab-pane" role="tabpanel" aria-labelledby="analyse-tab" tabindex="0">
-      <div id="analysis-whitelist-section">
-        <h6 class="heading text-center w-full m-0">Whitelist Keywords</h6>
-        <div class="badge-container card-body bg-white ">
-          <span id="analysis-whitelist-badge-1" class="badge bg-accent p-2 rounded-pill">Team Player</span>
-          <span id="analysis-whitelist-badge-2" class="badge bg-accent p-2 rounded-pill">Agile</span>
-          <span id="analysis-whitelist-badge-3" class="badge bg-accent p-2 rounded-pill">Problem Solver</span>
-        </div>
-      </div>
-
-      <hr class="my-2" />
-
-      <div id="analysis-blacklist-section" style="margin-top: 1rem;">
-        <h6 class="heading text-center w-full m-0">Blacklist Keywords</h6>
-        <div class="badge-container  card-body bg-white">
-          <span id="analysis-blacklist-badge-1" class="badge bg-danger p-2 rounded-pill">Micromanage</span>
-          <span id="analysis-blacklist-badge-2" class="badge bg-danger p-2 rounded-pill">Overtime</span>
-          <span id="analysis-blacklist-badge-3" class="badge bg-danger p-2 rounded-pill">Fast-paced</span>
-        </div>
-      </div>
-    </div>
-  `;
-    }
-
-    static async initSettingsTab(shadowRoot: ShadowRoot): Promise<void> {
-        const [whitelist, blacklist] = await Promise.all([
-            MessageBridge.sendToServiceWorker(
-                { type: "getWhiteLabelValues" },
-                true
-            ),
-            MessageBridge.sendToServiceWorker(
-                { type: "getBlackLabelValues" },
-                true
-            ),
-        ]);
-
-        const renderBadge = (
-            val: string,
-            badgeClass: string,
-            id: string
-        ): HTMLElement => {
-            const span = document.createElement("span");
-            span.className = `badge ${badgeClass} p-2 d-flex align-items-center`;
-            span.id = `${val}`;
-
-            const textNode = document.createTextNode(val);
-            const closeBtn = document.createElement("button");
-            closeBtn.type = "button";
-            closeBtn.className = "btn-close btn-close-white btn-sm ms-2";
-            closeBtn.setAttribute("aria-label", "Remove");
-
-            // Optional: Add click handler to remove badge visually
-            closeBtn.addEventListener("click", () => span.remove());
-
-            span.appendChild(textNode);
-            span.appendChild(closeBtn);
-
-            return span;
-        };
-
-        const whitelistContainer =
-            shadowRoot.getElementById("whitelist-badges");
-        const blacklistContainer =
-            shadowRoot.getElementById("blacklist-badges");
-
-        if (whitelistContainer) {
-            whitelistContainer.innerHTML = "";
-            (whitelist || []).forEach((kw: string, idx: number) => {
-                const badge = renderBadge(kw, "bg-success", `whitelist-${idx}`);
-                whitelistContainer.appendChild(badge);
-            });
-        }
-
-        if (blacklistContainer) {
-            blacklistContainer.innerHTML = "";
-            (blacklist || []).forEach((kw: string, idx: number) => {
-                const badge = renderBadge(kw, "bg-danger", `blacklist-${idx}`);
-                blacklistContainer.appendChild(badge);
-            });
-        }
-    }
-
-    // Settings tab now includes the Keyword Manager UI
     static renderSettingsTab(): string {
         return `
-      <div class="tab-pane fade" id="settings-tab-pane" role="tabpanel" aria-labelledby="settings-tab" tabindex="0">
-        <div class="bg-light card bg-white">
-          <h6 class="text-center mb-2 heading card-title">Keyword Manager</h6>
-          <div class="card-body py-4 px-3 shadow-sm w-100" >
-            <div class="">
-              <h6>Whitelist Keywords</h6>
-              <div class="input-group mb-2">
-                <input type="text" id="whitelist-input" class="form-control" placeholder="Add whitelist keyword" />
-                <button id="add-whitelist" class="btn btn-success">Add</button>
-              </div>
-              <div id="whitelist-badges" class="d-flex flex-wrap gap-2"></div>
-            </div>
+    <div class="tab-pane fade" id="settings-tab-pane" role="tabpanel" aria-labelledby="settings-tab" tabindex="0">
+        <div class="card bg-light border-0 rounded-4 shadow-sm px-3 py-3">
+            <div class="card-body px-0">
+                <!-- Whitelist Section -->
+                <div class="mb-4">
+                    <label class="form-label fw-bold mb-2" style="font-size: 1.1rem;">Whitelist Keywords</label>
+                    <div class="input-group mb-2">
+                        <input
+                            type="text"
+                            id="whitelist-input"
+                            class="form-control rounded-start-pill"
+                            placeholder="eg: remote"
+                            style="font-size: 0.85rem; font-style: italic; padding: 0.5rem 1rem;"
+                        />
+                        <button
+                            id="add-whitelist"
+                            class="btn btn-outline-primary rounded-end-pill"
+                            style="font-size: 0.85rem;"
+                        >
+                            Add
+                        </button>
+                    </div>
+                    <div
+                        id="whitelist-badges"
+                        class="badge-scroll-container d-flex flex-wrap gap-2"
+                        ></div>
+                </div>
 
-            <hr />
+                <!-- Divider -->
+                <hr class="my-4" />
 
-            <div class="">
-              <h6>Blacklist Keywords</h6>
-              <div class="input-group mb-2">
-                <input type="text" id="blacklist-input" class="form-control" placeholder="Add blacklist keyword" />
-                <button id="add-blacklist" class="btn btn-danger">Add</button>
-              </div>
-              <div id="blacklist-badges" class="d-flex flex-wrap gap-2"></div>
+                <!-- Blacklist Section -->
+                <div>
+                    <label class="form-label fw-bold mb-2" style="font-size: 1.1rem;">Blacklist Keywords</label>
+                    <div class="input-group mb-2">
+                        <input
+                            type="text"
+                            id="blacklist-input"
+                            class="form-control rounded-start-pill"
+                            placeholder="eg: part-time"
+                            style="font-size: 0.85rem; font-style: italic; padding: 0.5rem 1rem;"
+                        />
+                        <button
+                            id="add-blacklist"
+                            class="btn btn-outline-primary rounded-end-pill"
+                            style="font-size: 0.85rem;"
+                        >
+                            Add
+                        </button>
+                    </div>
+                    <div
+                        id="blacklist-badges"
+                        class="badge-scroll-container d-flex flex-wrap gap-2"
+                        ></div>
+                </div>
             </div>
-          </div>
         </div>
-      </div>
-    `;
+    </div>`;
     }
 
-    // Initialize tab switching & initial data load
-    static initialize(shadowRoot: ShadowRoot): void {
+    // ---------------- Settings Tab Logic ----------------
+
+    static async initSettingsTab(shadowRoot: ShadowRoot): Promise<void> {
+        let whitelist: string[] = [],
+            blacklist: string[] = [];
+
+        try {
+            [whitelist, blacklist] = await Promise.all([
+                MessageBridge.sendToServiceWorker(
+                    { type: "getWhiteLabelValues" },
+                    true
+                ),
+                MessageBridge.sendToServiceWorker(
+                    { type: "getBlackLabelValues" },
+                    true
+                ),
+            ]);
+        } catch (err) {
+            console.error("Keyword fetch failed", err);
+        }
+
+        this.renderKeywordBadges(
+            shadowRoot,
+            BADGE_IDS.whitelist,
+            (whitelist || []).filter((kw) => kw.trim()),
+            BADGE_CLASSES.whitelist
+        );
+
+        this.renderKeywordBadges(
+            shadowRoot,
+            BADGE_IDS.blacklist,
+            (blacklist || []).filter((kw) => kw.trim()),
+            BADGE_CLASSES.blacklist
+        );
+    }
+
+    private static renderKeywordBadges(
+        shadowRoot: ShadowRoot,
+        containerId: string,
+        keywords: string[],
+        badgeClass: string
+    ): void {
+        const container = shadowRoot.getElementById(containerId);
+        if (!container) return;
+
+        container.innerHTML = "";
+        const fragment = document.createDocumentFragment();
+        const seen = new Set<string>();
+
+        keywords.forEach((kw: string) => {
+            const cleanKw = kw.trim();
+            if (!cleanKw || seen.has(cleanKw)) return;
+
+            seen.add(cleanKw);
+            const badge = this.createBadgeElement(cleanKw, badgeClass);
+            fragment.appendChild(badge);
+        });
+
+        if (fragment.childNodes.length === 0) {
+            const placeholder = document.createElement("small");
+            placeholder.textContent = "No keywords added.";
+            placeholder.className = "text-muted fst-italic";
+            container.appendChild(placeholder);
+        } else {
+            container.appendChild(fragment);
+        }
+    }
+
+    private static createBadgeElement(
+        keyword: string,
+        badgeClass: string
+    ): HTMLElement {
+        const span = document.createElement("span");
+        span.className = `badge ${badgeClass} p-2 d-flex align-items-center`;
+        span.id = `badge-${safeBtoa(keyword)}`;
+
+        const textNode = document.createTextNode(keyword);
+        const closeBtn = document.createElement("button");
+        closeBtn.type = "button";
+        closeBtn.className = "btn-close btn-close-white btn-sm ms-2";
+        closeBtn.setAttribute("aria-label", "Remove");
+
+        closeBtn.addEventListener("click", () => span.remove());
+
+        span.appendChild(textNode);
+        span.appendChild(closeBtn);
+        return span;
+    }
+
+    // ---------------- Tab & Logout Handlers ----------------
+
+    private static setupTabNavigation(shadowRoot: ShadowRoot): void {
         const tabButtons =
             shadowRoot.querySelectorAll<HTMLButtonElement>(".nav-link");
         const tabPanes = shadowRoot.querySelectorAll<HTMLElement>(".tab-pane");
-
-        // Load Copy tab data once on initialization (because it's active by default)
-        // this.loadCopyTabData(shadowRoot);
 
         tabButtons.forEach((button) => {
             button.addEventListener("click", async () => {
@@ -197,44 +244,62 @@ export class KeywordToolPanel {
                     ?.substring(1);
                 if (!targetId) return;
 
-                // Deactivate all tabs and panes
-                tabButtons.forEach((btn) => btn.classList.remove("active"));
+                // Deactivate all
+                tabButtons.forEach((btn) => {
+                    btn.classList.remove("active");
+                    btn.setAttribute("aria-selected", "false");
+                });
+
                 tabPanes.forEach((pane) =>
                     pane.classList.remove("show", "active")
                 );
 
-                // Activate clicked tab and corresponding pane
+                // Activate clicked
                 button.classList.add("active");
+                button.setAttribute("aria-selected", "true");
+
                 const targetPane = shadowRoot.getElementById(targetId);
                 targetPane?.classList.add("show", "active");
 
-                // Handle tab-specific logic
-                switch (button.id) {
-                    case "copy-tab":
-                        // await this.loadCopyTabData(shadowRoot);
-                        break;
-                    case "analyse-tab":
-                        // Future: Load or update analysis UI here
-                        break;
-                    case "settings-tab":
-                        // Keyword Manager is static in the settings tab content
-                        await this.initSettingsTab(shadowRoot);
-                        break;
+                // Save active tab for next load
+                localStorage.setItem("activeTab", button.id);
+
+                // Load tab-specific content
+                if (button.id === "settings-tab") {
+                    await this.initSettingsTab(shadowRoot);
                 }
             });
         });
 
-        const logoutBtn = shadowRoot.getElementById("logoutBtn");
-        if (logoutBtn) {
-            logoutBtn.addEventListener("click", async () => {
-               let isLoggedOut = await MessageBridge.sendToServiceWorker({ type: "logout" }, true);
-               if(isLoggedOut){
-                removeExistingPopup();
-                attachLoginPopup();
-               }
-            });
-        }
+        // Restore last active tab
+        const defaultTabId = localStorage.getItem("activeTab") ?? "copy-tab";
+        const defaultBtn = shadowRoot.getElementById(
+            defaultTabId
+        ) as HTMLButtonElement;
+        defaultBtn?.click();
     }
 
-    // Load data for Copy tab and update UI
+    private static setupLogoutHandler(shadowRoot: ShadowRoot): void {
+        const logoutBtn = shadowRoot.getElementById("logoutBtn");
+        if (!logoutBtn) return;
+
+        logoutBtn.addEventListener("click", async () => {
+            logoutBtn.textContent = "Logging out...";
+            logoutBtn.setAttribute("disabled", "true");
+
+            try {
+                const isLoggedOut = await MessageBridge.sendToServiceWorker(
+                    { type: "logout" },
+                    true
+                );
+                if (isLoggedOut) {
+                    removeExistingPopup();
+                    attachLoginPopup();
+                }
+            } finally {
+                logoutBtn.textContent = "Logout";
+                logoutBtn.removeAttribute("disabled");
+            }
+        });
+    }
 }
