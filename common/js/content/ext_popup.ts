@@ -5,32 +5,47 @@ import { dragElement } from "../../utils/draggable";
 var $JQ = $.noConflict();
 
 export class customPopup {
-    static globalStyles(): string {
-        return `
-      <link rel="stylesheet" href="${chrome.runtime.getURL(
-          "styles/bootstrap.min.css"
-      )}" />
-      <link rel="stylesheet" href="${chrome.runtime.getURL(
-          "styles/content_style.css"
-      )}" />
-    `;
-    }
-
     static loggedOutBody(): string {
         return `
-      <div class="login-ui">
-        <div class="card p-4 shadow-sm w-100" >
-          <h6 class="text-center mb-2">Login</h6>
+      <div class="login-ui d-flex justify-content-center align-items-center" style="min-height: 250px;">
+        <div class="card shadow rounded-4 px-4 pt-4 pb-3" style="width: 100%; max-width: 320px;">
+          <div class="text-center mb-3">
+            <div class="rounded-circle bg-primary text-white d-inline-flex justify-content-center align-items-center" style="width: 48px; height: 48px; font-size: 24px;">
+              🔒
+            </div>
+            <h5 class="fw-semibold mt-2 mb-0">Welcome Back</h5>
+            <p class="text-muted small">Sign in to continue</p>
+          </div>
           <form>
             <div class="mb-3">
-              <label for="email" class="form-label">Email address</label>
-              <input type="email" class="form-control" id="email" placeholder="Enter email" required>
+              <label for="email" class="form-label fw-medium">Email</label>
+              <input
+                type="email"
+                class="form-control rounded-pill px-3"
+                id="email"
+                placeholder="you@example.com"
+                required
+              />
             </div>
             <div class="mb-3">
-              <label for="password" class="form-label">Password</label>
-              <input type="password" class="form-control" id="password" placeholder="Password" required>
+              <label for="password" class="form-label fw-medium">Password</label>
+              <input
+                type="password"
+                class="form-control rounded-pill px-3"
+                id="password"
+                placeholder="••••••••"
+                required
+              />
             </div>
-            <button id="loginBtn_job_keyword" type="submit" class="btn btn-primary w-100">Login</button>
+            <div class="d-grid mt-3">
+              <button
+                id="loginBtn_job_keyword"
+                type="submit"
+                class="btn btn-primary rounded-pill fw-semibold"
+              >
+                Login
+              </button>
+            </div>
           </form>
         </div>
       </div>
@@ -40,9 +55,13 @@ export class customPopup {
     static outerElementBody(): string {
         return `
       <div class="top-right-popup" id="job-keyword-analysis-popup">
-         <div id="popup-body" class="bg-color-light">
+         <div id="popup-body" class="bg-color-light rounded-4 shadow-lg">
           {{{body}}}
          </div>
+         <div id="notification-container" class="position-fixed top-0 end-0 p-3" style="z-index: 9999; max-width: 320px;">
+
+        </div>
+
       </div>
     `;
     }
@@ -86,7 +105,7 @@ export async function attachLoginPopup() {
 }
 
 export async function attachMainPopup() {
-    await attachPopupUI((shadow) => KeywordToolPanel.render(shadow));
+    await attachPopupUI((shadow) => KeywordToolPanel.render());
 }
 
 export function removeExistingPopup() {

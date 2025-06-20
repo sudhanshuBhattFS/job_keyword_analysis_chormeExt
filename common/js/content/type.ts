@@ -1,9 +1,3 @@
-export interface tabData {
-    name: string;
-    description: string;
-    location: string;
-    title: string;
-}
 export interface SelectorGroup {
     selector: string[];
 }
@@ -23,6 +17,14 @@ export type JobPortalConfig = {
 export interface KeywordMatchResult {
     whitelistCount: number;
     blacklistCount: number;
+    matchedWhitelist: string[];
+    matchedBlacklist: string[];
+}
+
+export interface IAnalyzedJobData {
+    selector: string;
+    whitelistCount: string[];
+    blacklistCount: string[];
     matchedWhitelist: string[];
     matchedBlacklist: string[];
 }
