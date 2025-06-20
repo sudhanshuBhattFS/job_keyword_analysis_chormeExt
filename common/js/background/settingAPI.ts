@@ -20,7 +20,14 @@ export async function fetchJobPortalConfig(): Promise<any | null> {
 
         return result.data;
     } catch (error) {
-        console.log("Error fetching job portal config:", error.message);
+        if (error instanceof Error) {
+            console.log("Error fetching job portal config:", error.message);
+        } else {
+            console.log(
+                "Unknown error occurred while fetching job portal config:",
+                error
+            );
+        }
         return null;
     }
 }
