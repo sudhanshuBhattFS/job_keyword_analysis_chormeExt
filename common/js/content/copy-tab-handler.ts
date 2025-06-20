@@ -131,10 +131,7 @@ export class CopyTabPanel {
     // 4.3 Copy current job details to clipboard
     static async copyJobDataToClipboard(): Promise<void> {
         const shadowRoot = getExtensionShadowRoot();
-        if (!shadowRoot) {
-            console.warn("ShadowRoot not found.");
-            return;
-        }
+        if (!shadowRoot) return;
 
         const copyBtn = shadowRoot.querySelector(
             "#copy-job-description-btn"
@@ -146,70 +143,30 @@ export class CopyTabPanel {
         if (copyBtn) copyBtn.disabled = true;
         if (displayList) showSpinner(displayList);
 
-        const configStore = ConfigStore.getInstance();
-        const configList = await configStore.loadConfig();
-
-        if (!Array.isArray(configList) || configList.length === 0) {
-            showError(displayList, "No configuration found for this page.");
+        const jobData = await this.getCurrentJobData();
+        if (!jobData) {
+            showError(displayList, "Unable to extract job data.");
             if (copyBtn) copyBtn.disabled = false;
             return;
         }
 
-        const matchedConfig = configList.find((cfg) => matchUrlPattern(cfg));
-        if (!matchedConfig) {
-            showError(displayList, "No matching job portal config.");
-            if (copyBtn) copyBtn.disabled = false;
-            return;
-        }
-
-        const companyName = getText(
-            matchedConfig?.selectors?.companyName?.selector
-        );
-        const location = getText(matchedConfig?.selectors?.location?.selector);
-        const title = getText(matchedConfig?.selectors?.jobTitle?.selector);
-        const url = window.location.href;
-
-        const row = [companyName, title, location, url]
-            .map(sanitize)
-            .join("\t");
+        const row = [
+            jobData.company,
+            jobData.title,
+            jobData.location,
+            jobData.url,
+        ].join("\t");
 
         try {
             await MessageBridge.sendToServiceWorker(
-                {
-                    type: "atsJobCopied",
-                    data: {
-                        jobData: { company: companyName, location, title, url },
-                    },
-                },
+                { type: "atsJobCopied", data: { jobData } },
                 true
             );
-        } catch (err) {
-            showError(displayList, "Failed to save copied job.");
-            console.warn("Service worker copy error", err);
-        }
-
-        try {
             await navigator.clipboard.writeText(row);
             displayList.innerHTML = `<div class="alert alert-success mb-0">Copied successfully.</div>`;
         } catch (err) {
-            // Fallback using Clipboard API permissions
-            try {
-                const permissionStatus = await navigator.permissions.query({
-                    name: "clipboard-write" as PermissionName,
-                });
-                if (
-                    permissionStatus.state === "granted" ||
-                    permissionStatus.state === "prompt"
-                ) {
-                    await navigator.clipboard.writeText(row);
-                    displayList.innerHTML = `<div class="alert alert-success mb-0">Copied successfully.</div>`;
-                } else {
-                    throw new Error("Clipboard permission denied");
-                }
-            } catch (fallbackErr) {
-                console.warn("Clipboard fallback also failed:", fallbackErr);
-                showError(displayList, "Clipboard copy failed.");
-            }
+            console.warn("Copy failed:", err);
+            showError(displayList, "Clipboard copy failed.");
         }
 
         if (copyBtn) copyBtn.disabled = false;
@@ -275,12 +232,25 @@ export class CopyTabPanel {
                 whitelist,
                 blacklist
             );
-            const url = window.location.href;
+            console.log("result", result);
+            const jobData = await this.getCurrentJobData();
+            if (!jobData) {
+                showError(displayList, "Job info not found.");
+                if (analyseBtn) analyseBtn.disabled = false;
+                return;
+            }
+
+            // const url = window.location.href;
 
             await MessageBridge.sendToServiceWorker(
                 {
                     type: "atsJobAnalyzed",
-                    data: { jobData: { ...result, url } },
+                    data: {
+                        jobData: {
+                            ...result,
+                            ...jobData,
+                        },
+                    },
                 },
                 true
             );
@@ -292,8 +262,39 @@ export class CopyTabPanel {
                 "An error occurred while analyzing the job."
             );
             console.error("Analysis failed:", err);
+        } finally {
+            if (analyseBtn) analyseBtn.disabled = false;
+        }
+    }
+
+    static async getCurrentJobData(): Promise<{
+        title: string;
+        company: string;
+        location: string;
+        url: string;
+    } | null> {
+        const configStore = ConfigStore.getInstance();
+        const configList = await configStore.loadConfig();
+
+        if (!configList || configList.length === 0) {
+            return null;
         }
 
-        if (analyseBtn) analyseBtn.disabled = false;
+        const matchedConfig = configList.find((cfg) => matchUrlPattern(cfg));
+        if (!matchedConfig) return null;
+
+        const company = getText(
+            matchedConfig?.selectors?.companyName?.selector
+        );
+        const location = getText(matchedConfig?.selectors?.location?.selector);
+        const title = getText(matchedConfig?.selectors?.jobTitle?.selector);
+        const url = window.location.href;
+
+        return {
+            title: sanitize(title),
+            company: sanitize(company),
+            location: sanitize(location),
+            url,
+        };
     }
 }
