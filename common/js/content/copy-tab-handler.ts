@@ -168,7 +168,7 @@ export class CopyTabPanel {
             jobData.title,
             jobData.location,
             jobData.url,
-            new Date().toISOString(),
+            // new Date().toISOString(),
         ].join("\t");
 
         try {

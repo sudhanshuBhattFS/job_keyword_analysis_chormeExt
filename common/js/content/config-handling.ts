@@ -3,7 +3,7 @@ import { MessageBridge } from "./messageBridge";
 import { JobPortalConfig } from "./type";
 
 const CONFIG_STORAGE_KEY = "job_portal_config";
-const CONFIG_TTL_MS = 1000 * 60 * 60 * 6; // 6 hours
+const CONFIG_TTL_MS = 1000 * 60 * 5; // 5 minutes
 
 export function matchUrlPattern(config: JobPortalConfig): boolean {
     const currentUrl = window.location.href.toLowerCase();
