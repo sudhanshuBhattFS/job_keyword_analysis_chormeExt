@@ -16,7 +16,7 @@ export function matchUrlPattern(config: JobPortalConfig): boolean {
             const regex = new RegExp(patternStr.replace(/^\/|\/$/g, ""), "i");
             return regex.test(currentUrl);
         } catch (e) {
-            console.warn(`Invalid RegExp in config: ${patternStr}`, e);
+            console.log(`Invalid RegExp in config: ${patternStr}`, e);
             return false;
         }
     });

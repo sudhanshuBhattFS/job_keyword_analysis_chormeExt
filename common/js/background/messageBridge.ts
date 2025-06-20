@@ -16,14 +16,14 @@ export const MessageBridge = {
     const numericTabId = Number(tabId);
 
     if (!Number.isInteger(numericTabId) || numericTabId <= 0) {
-      console.warn("Invalid tabId for sendToContentScript:", tabId, message);
+      console.log("Invalid tabId for sendToContentScript:", tabId, message);
       return Promise.resolve(null);
     }
 
     return new Promise((resolve) => {
       chrome.tabs.sendMessage(numericTabId, message, (response) => {
         if (chrome.runtime.lastError) {
-          console.warn(
+          console.log(
             "ContentScript error:",
             chrome.runtime.lastError.message
           );

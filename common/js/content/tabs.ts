@@ -266,6 +266,10 @@ export class KeywordToolPanel {
 
                 // Load tab-specific content
                 if (button.id === "settings-tab") {
+                    await MessageBridge.sendToServiceWorker(
+                        { type: "syncKeywordWithBackend" },
+                        true
+                    );
                     await this.initSettingsTab(shadowRoot);
                 }
             });

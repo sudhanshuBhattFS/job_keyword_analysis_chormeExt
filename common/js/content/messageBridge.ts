@@ -24,7 +24,7 @@ function sendToServiceWorker<T = MessageResponse>(
     return new Promise((resolve) => {
       chrome.runtime.sendMessage(message, (response) => {
         if (chrome.runtime.lastError) {
-          console.warn(
+          console.log(
             "ServiceWorker error:",
             chrome.runtime.lastError.message
           );

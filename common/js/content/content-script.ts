@@ -19,7 +19,7 @@ MessageBridge.onMessage(async (request) => {
             break;
 
         default:
-            console.warn("Unhandled message:", request);
+            console.log("Unhandled message:", request);
     }
 });
 
@@ -28,7 +28,7 @@ const initialize = async (): Promise<void> => {
         const configStore = ConfigStore.getInstance();
         const configList = await configStore.loadConfig();
         if (!Array.isArray(configList) || configList.length === 0) {
-            console.warn("No configuration available.");
+            console.log("No configuration available.");
             return;
         }
 

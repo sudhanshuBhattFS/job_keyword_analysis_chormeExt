@@ -10,7 +10,7 @@ export async function apiFetch<T = any>(
             `${currentEnvironment.apiUrl}${endpoint}`,
             {
                 ...options,
-                credentials: "include", // ✅ send and receive cookies
+                credentials: "include",
                 headers: {
                     "Content-Type": "application/json",
                     ...(options.headers || {}),
@@ -20,7 +20,7 @@ export async function apiFetch<T = any>(
 
         // ⚠️ Handle expired session
         if (response.status === 401) {
-            console.warn("Session expired. Logging out...");
+            console.log("Session expired. Logging out...");
             await LocalDb.clearAuthData(); // Clear local storage or cookies
             chrome.runtime.sendMessage({ type: "SESSION_EXPIRED" });
             return null;

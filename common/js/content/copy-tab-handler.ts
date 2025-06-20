@@ -24,7 +24,27 @@ function getText(selectors: string | string[]): string {
             }
         }
     }
-    console.warn("[getText] No match for selectors:", selArr);
+    console.log("[getText] No match for selectors:", selArr);
+    return "N/A";
+}
+
+function getUrl(selectors: string | string[]): string {
+    const selArr = Array.isArray(selectors) ? selectors : [selectors];
+
+    for (const sel of selArr) {
+        if (!sel) continue;
+
+        const ele = $(sel);
+        const elNode = ele.get(0);
+
+        if (elNode && elNode instanceof HTMLAnchorElement && elNode.href) {
+            const href = elNode.href.trim();
+            console.log(`[getUrl] Found "${href}" for selector "${sel}"`);
+            return href;
+        }
+    }
+
+    console.log("[getUrl] No match for selectors:", selArr);
     return "N/A";
 }
 
@@ -41,13 +61,6 @@ function showSpinner(container: HTMLElement): void {
 
 function showError(container: HTMLElement, msg: string): void {
     container.innerHTML = `<div class="alert alert-danger mb-2">${msg}</div>`;
-}
-
-function sendDataToGoogleSheet(data: any): void {
-    MessageBridge.sendToServiceWorker(
-        { type: "sendDataToGoogleSheet", data },
-        false
-    );
 }
 
 // -----------------------------
@@ -166,7 +179,7 @@ export class CopyTabPanel {
             await navigator.clipboard.writeText(row);
             displayList.innerHTML = `<div class="alert alert-success mb-0">Copied successfully.</div>`;
         } catch (err) {
-            console.warn("Copy failed:", err);
+            console.log("Copy failed:", err);
             showError(displayList, "Clipboard copy failed.");
         }
 
@@ -289,7 +302,8 @@ export class CopyTabPanel {
         );
         const location = getText(matchedConfig?.selectors?.location?.selector);
         const title = getText(matchedConfig?.selectors?.jobTitle?.selector);
-        const url = window.location.href;
+        const altUrl = getUrl(matchedConfig?.selectors?.url?.selector);
+        const url = altUrl && altUrl != "N/A" ? altUrl : window.location.href;
 
         return {
             title: sanitize(title),

@@ -5,6 +5,7 @@ import { autoReloadTabs } from "./autoreload";
 import { loginTeamMember, logoutTeamMember } from "./authAPI";
 import { fetchJobPortalConfig } from "./settingAPI";
 import {
+    fetchAndStoreKeywords,
     saveAnalyzedJob,
     saveCopiedJob,
     syncKeywordWithBackend,
@@ -27,7 +28,7 @@ MessageBridge.onMessage(async (request, sender) => {
     switch (request?.type) {
         case "isLoggedIn": {
             if (!tabId) {
-                console.warn("[isLoggedIn] No tabId found for sender.");
+                console.log("[isLoggedIn] No tabId found for sender.");
                 return;
             }
             const authData = await LocalDb.getAuthData();
@@ -130,25 +131,6 @@ MessageBridge.onMessage(async (request, sender) => {
             return;
         }
 
-        case "sendDataToGoogleSheet": {
-            const { data } = request;
-            fetch(
-                "https://script.google.com/macros/s/AKfycbxFS0wn3gvPi7_Vqop6NvRP-gVpZmVEGbLVH5Kx2qDyUPgMHomO-DLr_DjZkOHQbzEZXg/exec",
-                {
-                    method: "POST",
-                    body: JSON.stringify(data),
-                    headers: {
-                        "Content-Type": "application/json",
-                    },
-                }
-            )
-                .then((response) => response.json())
-                .then((res) => console.log("Google Sheet Response:", res))
-                .catch((err) =>
-                    console.log("Error pushing to Google Sheet", err.message)
-                );
-        }
-
         case "atsConfigFetch": {
             const config = await fetchJobPortalConfig();
             return config;
@@ -171,6 +153,11 @@ MessageBridge.onMessage(async (request, sender) => {
                 return { success: result };
             }
             return { success: false, message: "No job data provided." };
+        }
+
+        case "syncKeywordWithBackend": {
+            await fetchAndStoreKeywords();
+            return;
         }
         default:
             return;

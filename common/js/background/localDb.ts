@@ -83,8 +83,13 @@ export class LocalDb {
         });
     }
 
-    static async insertToWhitelistKey(value: string | string[]): Promise<void> {
+    static async insertToWhitelistKey(value: string | string[], replaceAll: boolean = false): Promise<void> {
         chrome.storage.local.get(["whitelistKeywords"], (result) => {
+            if (replaceAll) {
+                // If replaceAll is true, we clear the existing list
+                chrome.storage.local.set({ whitelistKeywords: Array.isArray(value) ? value : [value] });
+                return;
+            }
             const existingList: string[] = result["whitelistKeywords"] || [];
             const incoming = Array.isArray(value) ? value : [value];
 
@@ -94,8 +99,13 @@ export class LocalDb {
         });
     }
 
-    static async insertToBlacklistKey(value: string | string[]): Promise<void> {
+    static async insertToBlacklistKey(value: string | string[], replaceAll: boolean = false): Promise<void> {
         chrome.storage.local.get(["blacklistKeywords"], (result) => {
+            if (replaceAll) {
+                // If replaceAll is true, we clear the existing list
+                chrome.storage.local.set({ blacklistKeywords: Array.isArray(value) ? value : [value] });
+                return;
+            }
             const existingList: string[] = result["blacklistKeywords"] || [];
             const incoming = Array.isArray(value) ? value : [value];
 
