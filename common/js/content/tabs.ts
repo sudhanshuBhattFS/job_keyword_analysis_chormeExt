@@ -39,16 +39,13 @@ export class KeywordToolPanel {
     <div id="keyword-tool-tabs-wrapper" class="card shadow rounded-4 border-0 bg-light">
         <div class="d-flex justify-content-between align-items-center px-4 py-3 border-bottom">
             <h5 class="mb-0 fw-semibold text-primary">Jobs Analyzer</h5>
-            <button
-    id="logoutBtn"
-    class="btn btn-sm btn-outline-danger rounded-circle d-flex align-items-center justify-content-center"
-    style="width: 36px; height: 36px; font-size: 16px;"
-    title="Logout"
-    aria-label="Logout"
->
-  ↩
-</button>
-
+            <button id="logoutBtn"
+                class="btn btn-sm btn-outline-danger rounded-circle d-flex align-items-center justify-content-center"
+                style="width: 36px; height: 36px; font-size: 16px;"
+                title="Logout"
+                aria-label="Logout">
+            ↩
+            </button>
         </div>
         ${this.renderTabHeaders()}
         ${this.renderTabContents()}
@@ -288,7 +285,7 @@ export class KeywordToolPanel {
         if (!logoutBtn) return;
 
         logoutBtn.addEventListener("click", async () => {
-            logoutBtn.textContent = "Logging out...";
+            // logoutBtn.textContent = "Logging out...";
             logoutBtn.setAttribute("disabled", "true");
 
             try {
@@ -301,7 +298,7 @@ export class KeywordToolPanel {
                     attachLoginPopup();
                 }
             } finally {
-                logoutBtn.textContent = "Logout";
+                // logoutBtn.textContent = "Logout";
                 logoutBtn.removeAttribute("disabled");
             }
         });
