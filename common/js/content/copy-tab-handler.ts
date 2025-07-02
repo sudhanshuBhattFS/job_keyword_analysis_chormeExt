@@ -4,8 +4,10 @@
 import $ from "jquery";
 import { ConfigStore, matchUrlPattern } from "./config-handling";
 import { MessageBridge } from "./messageBridge";
-import { highlightAndCountKeywords } from "./highlight/highlight";
-import { KeywordMatchResult } from "./type";
+import {
+    getKeywordMatches,
+    highlightAndCountKeywords,
+} from "./highlight/highlight";
 import { getExtensionShadowRoot } from "../../utils/global";
 
 // -----------------------------
@@ -67,15 +69,117 @@ function showError(container: HTMLElement, msg: string): void {
 // 3. Public Action Handlers
 // -----------------------------
 export function handleCopyJob(): void {
-    CopyTabPanel.copyJobDataToClipboard();
+    JobHelper.copyJobDataToClipboard();
 }
 
 export async function handleAnalyseJob(
     _: Function,
     shadowRoot: ShadowRoot
 ): Promise<void> {
-    CopyTabPanel.highlightAnalysisJobDescription(shadowRoot);
+    JobHelper.analyseJobDescription(shadowRoot);
 }
+
+// -----------------------------------------------------------------------------
+//  Shared types
+// -----------------------------------------------------------------------------
+interface JobData {
+    title: string;
+    company: string;
+    location: string;
+    url: string;
+}
+
+interface KeywordLists {
+    whitelist: string[];
+    blacklist: string[];
+}
+
+interface SiteConfig {
+  selectors: {
+    jobTitle?: { selector: string | string[] };
+    companyName?: { selector: string | string[] };
+    location?: { selector: string | string[] };
+    url?: { selector: string | string[] };
+    description?: { selector: string | string[] };
+  };
+}
+
+// -----------------------------------------------------------------------------
+//  Generic helpers (no DOM side-effects)
+// -----------------------------------------------------------------------------
+const fetchConfig = async () => {
+    const list = await ConfigStore.getInstance().loadConfig();
+    if (!Array.isArray(list) || list.length === 0)
+        throw new Error("config.empty");
+    return list;
+};
+
+const pickCurrentConfig = async () => {
+    const config = (await fetchConfig()).find(matchUrlPattern);
+    if (!config) throw new Error("config.noMatch");
+    return config;
+};
+
+const loadKeywordLists = async (): Promise<KeywordLists> => {
+    const [whitelist, blacklist] = await Promise.all([
+        MessageBridge.sendToServiceWorker(
+            { type: "getWhiteLabelValues" },
+            true
+        ),
+        MessageBridge.sendToServiceWorker(
+            { type: "getBlackLabelValues" },
+            true
+        ),
+    ]);
+
+    if (!Array.isArray(whitelist) || !Array.isArray(blacklist)) {
+        throw new Error("keywords.invalid");
+    }
+    return { whitelist, blacklist };
+};
+
+const extractJobData = (cfg: any): JobData => ({
+    title: sanitize(getText(cfg.selectors?.jobTitle?.selector)),
+    company: sanitize(getText(cfg.selectors?.companyName?.selector)),
+    location: sanitize(getText(cfg.selectors?.location?.selector)),
+    url: (() => {
+        const alt = getUrl(cfg.selectors?.url?.selector);
+        return alt && alt !== "N/A" ? alt : window.location.href;
+    })(),
+});
+
+// -----------------------------------------------------------------------------
+//  UI helpers (deal with spinners / buttons only here)
+// -----------------------------------------------------------------------------
+async function withSpinner<T>(
+    container: HTMLElement,
+    button: HTMLButtonElement | null,
+    job: () => Promise<T>
+): Promise<T> {
+    if (button) button.disabled = true;
+    showSpinner(container);
+
+    try {
+        return await job();
+    } catch (err) {
+        throw err; // let the caller decide the message
+    } finally {
+        if (button) button.disabled = false;
+    }
+}
+
+/* -------------------------------------------------------------------------
+   Shared error-message map + tiny helper
+------------------------------------------------------------------------- */
+const ERROR_MESSAGES: Record<string, string> = {
+    "config.empty": "No configuration found.",
+    "config.noMatch": "No matching configuration.",
+    "config.noDescriptionSelector": "Description selector missing in config.",
+    "keywords.invalid": "Keyword lists are invalid.",
+};
+
+const msgFor = (code: string, fallback: string) =>
+    ERROR_MESSAGES[code] ?? fallback;
 
 // -----------------------------
 // 4. CopyTabPanel Class
@@ -103,213 +207,107 @@ export class CopyTabPanel {
     </div>`;
     }
 
-    // 4.2 Display analyzed keywords
-    static displayAnalyzedJobData(result: KeywordMatchResult): string {
-        if (!result || typeof result !== "object")
-            return `<div class="text-center text-muted">No data to display.</div>`;
-
-        const capped = (arr: string[]) => [...new Set(arr)].slice(0, 50);
-        const renderBadges = (items: string[], badgeClass: string) =>
-            capped(items).length
-                ? capped(items)
-                      .map(
-                          (w) =>
-                              `<span class="badge ${badgeClass} px-3 py-2 rounded-pill small">${w}</span>`
-                      )
-                      .join("")
-                : `<span class="text-muted">None</span>`;
-
+    // -------------------------------------------------------------------------
+    //  Small pure utility used above
+    // -------------------------------------------------------------------------
+    static renderAnalysis(
+        result: ReturnType<typeof highlightAndCountKeywords>
+    ): string {
         return `
-    <div class="card border-0 shadow-sm rounded-4 pt-2 mt-2 px-4 bg-light">
-        <div class="mb-3">
-            <h6 class="fw-bold text-success mb-2">Matched Whitelist ${
-                result.whitelistCount
-            }</h6>
-            <div class="d-flex flex-wrap gap-2 badge-container">
-                ${renderBadges(result.matchedWhitelist, "bg-success")}
-            </div>
-        </div>
-        <hr />
-        <div>
-            <h6 class="fw-bold text-danger mb-2">Matched Blacklist ${
-                result.blacklistCount
-            }</h6>
-            <div class="d-flex flex-wrap gap-2 badge-container">
-                ${renderBadges(result.matchedBlacklist, "bg-danger")}
-            </div>
-        </div>
-    </div>`;
+      <ul class="list-group">
+        <li class="list-group-item">
+          <strong>Whitelist (${result.whitelistCount}):</strong>
+          ${result.matchedWhitelist.join(", ") || "-"}
+        </li>
+        <li class="list-group-item">
+          <strong>Blacklist (${result.blacklistCount}):</strong>
+          ${result.matchedBlacklist.join(", ") || "-"}
+        </li>
+      </ul>
+    `;
     }
+}
 
-    // 4.3 Copy current job details to clipboard
+export class JobHelper {
+    /** Copy tab-separated job data to clipboard */
     static async copyJobDataToClipboard(): Promise<void> {
         const shadowRoot = getExtensionShadowRoot();
         if (!shadowRoot) return;
 
-        const copyBtn = shadowRoot.querySelector(
+        const copyBtn = shadowRoot.querySelector<HTMLButtonElement>(
             "#copy-job-description-btn"
-        ) as HTMLButtonElement;
-        const displayList = shadowRoot.querySelector(
-            "#display-list"
-        ) as HTMLElement;
+        );
+        const displayEl =
+            shadowRoot.querySelector<HTMLElement>("#display-list");
+        if (!displayEl) return;
 
-        if (copyBtn) copyBtn.disabled = true;
-        if (displayList) showSpinner(displayList);
+        await withSpinner(displayEl, copyBtn, async () => {
+            const cfg = await pickCurrentConfig();
+            const job = extractJobData(cfg);
+            const { whitelist, blacklist } = await loadKeywordLists();
 
-        const jobData = await this.getCurrentJobData();
-        if (!jobData) {
-            showError(displayList, "Unable to extract job data.");
-            if (copyBtn) copyBtn.disabled = false;
-            return;
-        }
+            // analyse
+            const selector = cfg.selectors?.description?.selector ?? "";
+            if (!selector) throw new Error("config.noDescriptionSelector");
 
-        const row = [
-            jobData.company,
-            jobData.title,
-            jobData.location,
-            jobData.url,
-            // new Date().toISOString(),
-        ].join("\t");
+            const result = getKeywordMatches(selector, whitelist, blacklist);
 
-        try {
+            // send analysed data to backend
             await MessageBridge.sendToServiceWorker(
-                { type: "atsJobCopied", data: { jobData } },
+                {
+                    type: "atsJobAnalyzed",
+                    data: { jobData: { ...result, ...job } },
+                },
                 true
             );
-            await navigator.clipboard.writeText(row);
-            displayList.innerHTML = `<div class="alert alert-success mb-0">Copied successfully.</div>`;
-        } catch (err) {
-            console.log("Copy failed:", err);
-            showError(displayList, "Clipboard copy failed.");
-        }
 
-        if (copyBtn) copyBtn.disabled = false;
+            // copy
+            const row = [job.company, job.title, job.location, job.url].join(
+                "\t"
+            );
+            await navigator.clipboard.writeText(row);
+
+            displayEl.innerHTML = `<div class="alert alert-success mb-0">Copied successfully.</div>`;
+        }).catch((err) => {
+            console.error("Copy flow failed:", err);
+            showError(displayEl, msgFor(err.message, "Clipboard copy failed."));
+        });
     }
 
-    // 4.4 Highlight job description and show keyword match summary
-    static async highlightAnalysisJobDescription(
-        shadowRoot: ShadowRoot
-    ): Promise<void> {
-        const analyseBtn = shadowRoot.querySelector(
+    /** Highlight description & show keyword match summary */
+    static async analyseJobDescription(shadowRoot: ShadowRoot): Promise<void> {
+        const analyseBtn = shadowRoot.querySelector<HTMLButtonElement>(
             "#analyse-job-description-btn"
-        ) as HTMLButtonElement;
-        const displayList = shadowRoot.querySelector(
-            "#display-list"
-        ) as HTMLElement;
-
-        if (!displayList) {
+        );
+        const displayEl =
+            shadowRoot.querySelector<HTMLElement>("#display-list");
+        if (!displayEl) {
             alert("Analysis UI cannot be shown. Missing container.");
             return;
         }
 
-        if (analyseBtn) analyseBtn.disabled = true;
-        showSpinner(displayList);
+        await withSpinner(displayEl, analyseBtn, async () => {
+            const cfg = await pickCurrentConfig();
+            const selector = cfg.selectors?.description?.selector;
+            if (!selector) throw new Error("config.noDescriptionSelector");
 
-        const configStore = ConfigStore.getInstance();
-        const configList = await configStore.loadConfig();
-
-        if (!Array.isArray(configList) || configList.length === 0) {
-            showError(displayList, "No configuration found.");
-            if (analyseBtn) analyseBtn.disabled = false;
-            return;
-        }
-
-        const matchedConfig = configList.find((cfg) => matchUrlPattern(cfg));
-        const selector = matchedConfig?.selectors?.description?.selector;
-
-        if (!selector) {
-            showError(displayList, "Description selector missing in config.");
-            if (analyseBtn) analyseBtn.disabled = false;
-            return;
-        }
-
-        try {
-            const [whitelist, blacklist] = await Promise.all([
-                MessageBridge.sendToServiceWorker(
-                    { type: "getWhiteLabelValues" },
-                    true
-                ),
-                MessageBridge.sendToServiceWorker(
-                    { type: "getBlackLabelValues" },
-                    true
-                ),
-            ]);
-
-            if (!Array.isArray(whitelist) || !Array.isArray(blacklist)) {
-                showError(displayList, "Keyword lists are invalid.");
-                if (analyseBtn) analyseBtn.disabled = false;
-                return;
-            }
-
+            const { whitelist, blacklist } = await loadKeywordLists();
             const result = highlightAndCountKeywords(
                 selector,
                 whitelist,
                 blacklist
             );
-            console.log("result", result);
-            const jobData = await this.getCurrentJobData();
-            if (!jobData) {
-                showError(displayList, "Job info not found.");
-                if (analyseBtn) analyseBtn.disabled = false;
-                return;
-            }
 
-            // const url = window.location.href;
-
-            await MessageBridge.sendToServiceWorker(
-                {
-                    type: "atsJobAnalyzed",
-                    data: {
-                        jobData: {
-                            ...result,
-                            ...jobData,
-                        },
-                    },
-                },
-                true
-            );
-
-            displayList.innerHTML = this.displayAnalyzedJobData(result);
-        } catch (err) {
-            showError(
-                displayList,
-                "An error occurred while analyzing the job."
-            );
+            displayEl.innerHTML = CopyTabPanel.renderAnalysis(result);
+        }).catch((err) => {
             console.error("Analysis failed:", err);
-        } finally {
-            if (analyseBtn) analyseBtn.disabled = false;
-        }
-    }
-
-    static async getCurrentJobData(): Promise<{
-        title: string;
-        company: string;
-        location: string;
-        url: string;
-    } | null> {
-        const configStore = ConfigStore.getInstance();
-        const configList = await configStore.loadConfig();
-
-        if (!configList || configList.length === 0) {
-            return null;
-        }
-
-        const matchedConfig = configList.find((cfg) => matchUrlPattern(cfg));
-        if (!matchedConfig) return null;
-
-        const company = getText(
-            matchedConfig?.selectors?.companyName?.selector
-        );
-        const location = getText(matchedConfig?.selectors?.location?.selector);
-        const title = getText(matchedConfig?.selectors?.jobTitle?.selector);
-        const altUrl = getUrl(matchedConfig?.selectors?.url?.selector);
-        const url = altUrl && altUrl != "N/A" ? altUrl : window.location.href;
-
-        return {
-            title: sanitize(title),
-            company: sanitize(company),
-            location: sanitize(location),
-            url,
-        };
+            showError(
+                displayEl,
+                msgFor(
+                    err.message,
+                    "An error occurred while analyzing the job."
+                )
+            );
+        });
     }
 }

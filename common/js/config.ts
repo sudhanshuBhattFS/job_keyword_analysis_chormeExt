@@ -11,5 +11,5 @@ var config = {
     },
 };
 
-var currentEnvironment = config.PROD;
+var currentEnvironment = config.LOCAL;
 export default currentEnvironment;
