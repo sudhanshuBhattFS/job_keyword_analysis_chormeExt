@@ -145,7 +145,7 @@ MessageBridge.onMessage(async (request, sender) => {
             }
             return { success: false, message: "No job data provided." };
         }
-        case "atsJobAnalyzed": {
+        case "atsCopyJobAnalyzed": {
             const { jobData } = request.data || {};
             if (jobData) {
                 // Assuming saveAnalyzedJob is defined in teamMemberAPI

@@ -255,7 +255,7 @@ export class JobHelper {
             // send analysed data to backend
             await MessageBridge.sendToServiceWorker(
                 {
-                    type: "atsJobAnalyzed",
+                    type: "atsCopyJobAnalyzed",
                     data: { jobData: { ...result, ...job } },
                 },
                 true
